@@ -1,0 +1,12 @@
+[Unit]
+Description=Restore internal microphone capture level
+After=pipewire-pulse.service wireplumber.service
+Wants=pipewire-pulse.service wireplumber.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/pactl set-source-mute alsa_input.pci-0000_65_00.6.analog-stereo false
+ExecStart=/usr/bin/pactl set-source-volume alsa_input.pci-0000_65_00.6.analog-stereo 100%%
+
+[Install]
+WantedBy=default.target

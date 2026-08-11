@@ -33,6 +33,7 @@ for file in \
   alacritty/alacritty.toml \
   fish/config.fish fish/functions/la.fish fish/functions/ll.fish \
   hypr/hyprland.lua \
+  systemd/user/restore-internal-mic.service \
   wireplumber/wireplumber.conf.d/51-alc285-soft-volume.conf \
   gtk-3.0/gtk.css gtk-3.0/settings.ini \
   gtk-4.0/gtk.css gtk-4.0/settings.ini; do
@@ -40,6 +41,9 @@ for file in \
 done
 
 link_file "$repo_root/config/nvim" "$HOME/.config/nvim"
+
+systemctl --user daemon-reload
+systemctl --user enable --now restore-internal-mic.service
 
 themes_dir="$HOME/.config/alacritty/themes"
 if [[ ! -d $themes_dir/.git ]]; then

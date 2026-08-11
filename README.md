@@ -30,3 +30,6 @@ the dotfiles installer clones it automatically.
 
 The T3 Code desktop entry is retained only as a local reference: it is not
 installed because it points to a version-specific AppImage path.
+
+The dotfiles installer also enables a user service that restores the built-in
+Ryzen/ALC285 microphone to 100% and unmutes it whenever the audio session starts.
