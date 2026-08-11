@@ -33,6 +33,7 @@ limine
 linux
 linux-firmware
 loupe
+lsp-plugins-lv2
 mkinitcpio
 nautilus
 neovim
