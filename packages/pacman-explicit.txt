@@ -25,6 +25,7 @@ hyprland
 hyprpolkitagent
 iwd
 jq
+kdenlive
 kwin
 lazygit
 libpulse
