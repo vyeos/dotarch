@@ -32,4 +32,6 @@ The T3 Code desktop entry is retained only as a local reference: it is not
 installed because it points to a version-specific AppImage path.
 
 The dotfiles installer also enables a user service that restores the built-in
-Ryzen/ALC285 microphone to 100% and unmutes it whenever the audio session starts.
+Ryzen/ALC285 microphone to its 0 dB hardware baseline (shown as 10%) and unmutes it whenever the
+audio session starts. The WirePlumber soft-mixer workaround is limited to
+playback so it does not force the microphone's hardware gain to maximum.

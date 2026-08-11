@@ -6,7 +6,7 @@ Wants=pipewire-pulse.service wireplumber.service
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/pactl set-source-mute alsa_input.pci-0000_65_00.6.analog-stereo false
-ExecStart=/usr/bin/pactl set-source-volume alsa_input.pci-0000_65_00.6.analog-stereo 100%%
+ExecStart=/usr/bin/pactl set-source-volume alsa_input.pci-0000_65_00.6.analog-stereo 10%%
 
 [Install]
 WantedBy=default.target
