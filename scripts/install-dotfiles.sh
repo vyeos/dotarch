@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+backup_root="$HOME/.dotfiles-backups/$(date +%Y%m%d-%H%M%S)"
+
+link_file() {
+  local source=$1 target=$2
+  mkdir -p "$(dirname "$target")"
+  if [[ -e $target || -L $target ]]; then
+    if [[ $(readlink -f -- "$target") == $(readlink -f -- "$source") ]]; then
+      return
+    fi
+    mkdir -p "$backup_root/$(dirname "${target#$HOME/}")"
+    mv -- "$target" "$backup_root/${target#$HOME/}"
+  fi
+  ln -s -- "$source" "$target"
+}
+
+link_file "$repo_root/home/.bashrc" "$HOME/.bashrc"
+link_file "$repo_root/home/.bash_profile" "$HOME/.bash_profile"
+
+for file in \
+  alacritty/alacritty.toml \
+  fish/config.fish fish/functions/la.fish fish/functions/ll.fish \
+  hypr/hyprland.lua \
+  gtk-3.0/gtk.css gtk-3.0/settings.ini \
+  gtk-4.0/gtk.css gtk-4.0/settings.ini; do
+  link_file "$repo_root/config/$file" "$HOME/.config/$file"
+done
+
+link_file "$repo_root/config/nvim" "$HOME/.config/nvim"
+
+themes_dir="$HOME/.config/alacritty/themes"
+if [[ ! -d $themes_dir/.git ]]; then
+  git clone --depth 1 https://github.com/alacritty/alacritty-theme "$themes_dir"
+fi
+
+echo "Dotfiles installed. Any replaced files were moved to: $backup_root"

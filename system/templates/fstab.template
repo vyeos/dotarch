@@ -1,0 +1,9 @@
+# Generate this for the target machine after partitioning and creating Btrfs
+# subvolumes. Do not commit a real fstab: UUIDs and device names are host-specific.
+#
+# Example (run from the Arch installer after mounting the target root):
+#   genfstab -U /mnt | sudo tee /mnt/etc/fstab
+#
+# This machine uses Btrfs subvolumes named:
+#   @, @home, @var, @cache, @log
+# and a separate FAT EFI partition mounted at /boot.

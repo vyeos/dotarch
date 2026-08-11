@@ -1,0 +1,14 @@
+.DS_Store
+*.bak
+*.pacnew
+*.pacsave
+
+# Local editor and application state
+config/nvim/.neoconf.json
+config/fish/fish_variables
+
+# Never version credentials, keys, or browser/application profiles.
+secrets/
+**/.env
+**/*token*
+**/*secret*

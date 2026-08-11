@@ -1,0 +1,4 @@
+brave-bin
+papirus-folders
+redhat-fonts
+sddm-silent-theme

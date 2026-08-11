@@ -1,0 +1,26 @@
+[general]
+import = [
+    "~/.config/alacritty/themes/themes/everforest_dark_medium.toml"
+]
+
+[env]
+TERM = "xterm-256color"
+
+[window]
+padding = { x = 5, y = 5 }
+dynamic_padding = true
+
+[selection]
+save_to_clipboard = true
+
+#[terminal]
+#shell = { program = "fish", args = "-1" }
+
+[mouse]
+hide_when_typing = true
+
+[font]
+size = 12
+normal = { family = "JetBrainsMono Nerd Font", style = "Regular" }
+bold = { family = "JetBrainsMono Nerd Font", style = "Bold" }
+italic = { family = "JetBrainsMono Nerd Font", style = "Italic" }
