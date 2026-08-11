@@ -20,10 +20,20 @@ link_file() {
 link_file "$repo_root/home/.bashrc" "$HOME/.bashrc"
 link_file "$repo_root/home/.bash_profile" "$HOME/.bash_profile"
 
+mkdir -p "$HOME/.ssh"
+chmod 700 "$HOME/.ssh"
+github_known_hosts="$repo_root/home/.ssh/github_known_hosts"
+touch "$HOME/.ssh/known_hosts"
+if ! grep -Fqx -f "$github_known_hosts" "$HOME/.ssh/known_hosts"; then
+  cat "$github_known_hosts" >> "$HOME/.ssh/known_hosts"
+fi
+chmod 600 "$HOME/.ssh/known_hosts"
+
 for file in \
   alacritty/alacritty.toml \
   fish/config.fish fish/functions/la.fish fish/functions/ll.fish \
   hypr/hyprland.lua \
+  wireplumber/wireplumber.conf.d/51-alc285-soft-volume.conf \
   gtk-3.0/gtk.css gtk-3.0/settings.ini \
   gtk-4.0/gtk.css gtk-4.0/settings.ini; do
   link_file "$repo_root/config/$file" "$HOME/.config/$file"
