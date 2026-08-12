@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Bluetooth
 import Quickshell.Services.Mpris
@@ -125,10 +126,26 @@ FocusScope {
             clip: true
 
             Image {
+                id: mediaArtwork
+
                 anchors.fill: parent
                 source: root.player ? root.player.trackArtUrl : ""
                 fillMode: Image.PreserveAspectCrop
                 opacity: status === Image.Ready ? 0.26 : 0
+                layer.enabled: true
+
+                layer.effect: MultiEffect {
+                    autoPaddingEnabled: false
+                    maskEnabled: true
+
+                    maskSource: Rectangle {
+                        width: mediaArtwork.width
+                        height: mediaArtwork.height
+                        radius: Theme.radius
+                        layer.enabled: true
+                    }
+
+                }
 
                 Behavior on opacity {
                     NumberAnimation {

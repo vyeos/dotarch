@@ -57,8 +57,8 @@ FocusScope {
 
         Row {
             width: parent.width
-            height: 68
-            spacing: 6
+            height: 64
+            spacing: 8
 
             Repeater {
                 model: root.actions
@@ -69,7 +69,7 @@ FocusScope {
                     required property var modelData
                     readonly property bool highlighted: activeFocus || pointer.containsMouse
 
-                    width: (parent.width - 24) / 5
+                    width: 64
                     height: parent.height
                     activeFocusOnTab: true
                     Keys.onReturnPressed: root.activate(modelData.key)
@@ -80,7 +80,7 @@ FocusScope {
 
                     Rectangle {
                         anchors.fill: parent
-                        radius: Theme.radiusSmall
+                        radius: 13
                         color: root.pendingAction === modelData.key ? Theme.yellow : (actionButton.highlighted ? Theme.green : Theme.bg1)
                         border.width: parent.activeFocus ? 2 : 0
                         border.color: Theme.foreground

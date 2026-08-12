@@ -14,9 +14,13 @@ PanelWindow {
     readonly property int cornerWing: 16
     readonly property int canvasWidth: 552
     readonly property int canvasHeight: 600
+    readonly property int requestedBottomPadding: ShellState.panel === "control" ? 8 : contentPadding
+    readonly property int displayedBottomPadding: displayedPanel === "control" ? 8 : contentPadding
     readonly property real targetVisualWidth: ShellState.targetWidth + cornerWing * 2
-    readonly property real targetVisualHeight: ShellState.expanded ? panelContentHeight + contentPadding * 2 : collapsedHeight
+    readonly property real targetVisualHeight: ShellState.expanded ? panelContentHeight + contentPadding + requestedBottomPadding : collapsedHeight
     readonly property real panelContentHeight: ShellState.expanded ? Math.max(ShellState.panelHeights[ShellState.panel] || 0, requestedPanel ? requestedPanel.implicitHeight : 0) : 0
+    readonly property real batteryLevel: UPower.displayDevice ? UPower.displayDevice.percentage : 0
+    readonly property bool batteryCharging: UPower.displayDevice && (UPower.displayDevice.state === UPowerDeviceState.Charging || UPower.displayDevice.state === UPowerDeviceState.PendingCharge)
     property bool contentRevealed: false
     property bool clockRevealed: true
     property string displayedPanel: "control"
@@ -233,8 +237,8 @@ PanelWindow {
                 width: parent.width / 3
                 height: parent.height
                 verticalAlignment: Text.AlignVCenter
-                text: "󰁹  " + Math.round(UPower.displayDevice.percentage * 100) + "%"
-                color: Theme.green
+                text: "󰁹 " + (window.batteryCharging ? " " : "") + Math.round(window.batteryLevel * 100) + "%"
+                color: window.batteryLevel < 0.2 ? Theme.red : Theme.green
                 font.pixelSize: 11
             }
 
@@ -287,7 +291,7 @@ PanelWindow {
             anchors.leftMargin: window.contentPadding
             anchors.rightMargin: window.contentPadding
             anchors.topMargin: window.contentPadding
-            anchors.bottomMargin: window.contentPadding
+            anchors.bottomMargin: window.displayedBottomPadding
             visible: opacity > 0
             opacity: window.contentRevealed ? 1 : 0
             clip: true

@@ -110,7 +110,7 @@ case "$action" in
     case "${2:-}" in
       lock)
         if command -v hyprlock >/dev/null; then
-          hyprlock
+          hyprlock --config "$HOME/.config/hypr/hyprlock.conf"
         else
           loginctl lock-session
         fi

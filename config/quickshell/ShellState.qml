@@ -17,9 +17,9 @@ Singleton {
         "control": 359,
         "launcher": 330,
         "clipboard": 80,
-        "todo": 211,
+        "todo": 87,
         "capture": 199,
-        "power": 68
+        "power": 64
     })
     property string panel: "clock"
     readonly property bool expanded: panel !== "clock"
@@ -65,16 +65,7 @@ Singleton {
     PersistentProperties {
         id: persistence
 
-        property var todos: [{
-            "text": "Finish shell keyboard navigation",
-            "done": false
-        }, {
-            "text": "Tune the opening animation",
-            "done": false
-        }, {
-            "text": "Pick the Everforest palette",
-            "done": true
-        }]
+        property var todos: []
 
         reloadableId: "everforest-notch-state"
     }

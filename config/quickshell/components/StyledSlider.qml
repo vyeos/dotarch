@@ -31,7 +31,7 @@ FocusScope {
 
     Rectangle {
         anchors.fill: parent
-        radius: Theme.radius
+        radius: height / 2
         color: Theme.bg0
         border.width: root.activeFocus ? 2 : 0
         border.color: Theme.green
