@@ -137,9 +137,8 @@ hl.config({
   },
 
   decoration = {
-    rounding         = 5,
+    rounding         = 10,
     rounding_power   = 3,
-
     -- Change transparency of focused and unfocused windows
     active_opacity   = 1.0,
     inactive_opacity = 0.9,
@@ -290,6 +289,7 @@ local hyper   = "MOD3"  -- Caps Lock is remapped to a Hyper key (caps:hyper)
 hl.bind(hyper .. " + return", hl.dsp.exec_cmd(terminal))
 hl.bind(hyper .. " + B", hl.dsp.exec_cmd(browser))
 hl.bind(hyper .. " + T", hl.dsp.exec_cmd("/home/vyeos/.local/bin/t3code"))
+hl.bind(hyper .. " + O", hl.dsp.exec_cmd("/usr/bin/obs"))
 hl.bind(mainMod .. " + minus", hl.dsp.window.resize({ x = -100, y = 0, relative = true }))
 hl.bind(mainMod .. " + equal", hl.dsp.window.resize({ x = 100, y = 0, relative = true }))
 hl.bind(mainMod .. " + SHIFT + minus", hl.dsp.window.resize({ x = 0, y = -100, relative = true }))
