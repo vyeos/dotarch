@@ -230,13 +230,59 @@ PanelWindow {
             visible: opacity > 0
             opacity: window.clockRevealed ? 1 : 0
 
-            ShellText {
+            Item {
                 width: parent.width / 3
                 height: parent.height
-                verticalAlignment: Text.AlignVCenter
-                text: (window.batteryCharging ? "" : "󰁹") + " " + Math.round(window.batteryLevel * 100) + "%"
-                color: window.batteryLevel < 0.2 ? Theme.red : Theme.green
-                font.pixelSize: 11
+
+                ShellText {
+                    anchors.fill: parent
+                    visible: !Backend.recording
+                    verticalAlignment: Text.AlignVCenter
+                    text: (window.batteryCharging ? "" : "󰁹") + " " + Math.round(window.batteryLevel * 100) + "%"
+                    color: window.batteryLevel < 0.2 ? Theme.red : Theme.green
+                    font.pixelSize: 11
+                }
+
+                Row {
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: Backend.recording
+                    spacing: 6
+
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 7
+                        height: 7
+                        radius: 4
+                        color: Theme.red
+
+                        SequentialAnimation on opacity {
+                            running: Backend.recording
+                            loops: Animation.Infinite
+
+                            NumberAnimation {
+                                from: 1
+                                to: 0.35
+                                duration: 700
+                                easing.type: Easing.InOutSine
+                            }
+
+                            NumberAnimation {
+                                from: 0.35
+                                to: 1
+                                duration: 700
+                                easing.type: Easing.InOutSine
+                            }
+                        }
+                    }
+
+                    ShellText {
+                        text: "REC"
+                        color: Theme.red
+                        font.pixelSize: 10
+                        font.weight: Font.Bold
+                    }
+                }
             }
 
             ShellText {

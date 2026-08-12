@@ -296,6 +296,12 @@ hl.bind(hyper .. " + slash", hl.dsp.exec_cmd("qs ipc call notch toggle todo"))
 hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd("qs ipc call notch toggle capture"))
 hl.bind(mainMod .. " + ESCAPE", hl.dsp.exec_cmd("qs ipc call notch toggle power"))
 
+-- Direct capture shortcuts.
+hl.bind("ALT + SHIFT + 1", hl.dsp.exec_cmd("qs ipc call capture screenshot full"))
+hl.bind("ALT + SHIFT + 2", hl.dsp.exec_cmd("qs ipc call capture screenshot window"))
+hl.bind("ALT + SHIFT + 3", hl.dsp.exec_cmd("qs ipc call capture screenshot region"))
+hl.bind("ALT + SHIFT + 4", hl.dsp.exec_cmd("qs ipc call capture toggleRecording"))
+
 -- Example binds, see https://wiki.hypr.land/Configuring/Basics/Binds/ for more
 hl.bind(hyper .. " + return", hl.dsp.exec_cmd(terminal))
 hl.bind(hyper .. " + B", hl.dsp.exec_cmd(browser))
