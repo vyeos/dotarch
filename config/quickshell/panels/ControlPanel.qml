@@ -780,38 +780,9 @@ FocusScope {
         Row {
             width: parent.width
             height: 31
-            spacing: 6
-
-            ShellText {
-                anchors.verticalCenter: parent.verticalCenter
-                width: parent.width - trayRepeater.count * 31 - (quietState.visible ? quietState.width : 0)
-                text: "Long-running apps"
-                color: Theme.muted
-                font.pixelSize: 10
-            }
-
-            Row {
-                id: quietState
-
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 5
-                visible: trayRepeater.count === 0
-
-                Rectangle {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 6
-                    height: 6
-                    radius: 3
-                    color: Theme.green
-                }
-
-                ShellText {
-                    text: "all quiet"
-                    color: Theme.mutedDark
-                    font.pixelSize: 9
-                }
-
-            }
+            spacing: 5
+            visible: trayRepeater.count > 0
+            layoutDirection: Qt.RightToLeft
 
             Repeater {
                 id: trayRepeater
