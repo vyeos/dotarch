@@ -2,6 +2,18 @@
 set -euo pipefail
 
 action=${1:-}
+recording_pid_file=${XDG_RUNTIME_DIR:-/run/user/$UID}/quickshell-wf-recorder.pid
+
+recording_pid() {
+  local pid
+  [[ -r $recording_pid_file ]] || return 1
+  read -r pid < "$recording_pid_file"
+  if [[ ! $pid =~ ^[0-9]+$ ]] || [[ ! -r /proc/$pid/comm ]] || [[ $(<"/proc/$pid/comm") != wf-recorder ]]; then
+    rm -f -- "$recording_pid_file"
+    return 1
+  fi
+  printf '%s\n' "$pid"
+}
 
 wifi_device() {
   local path
@@ -18,12 +30,9 @@ wifi_status() {
   local network='Wi-Fi off'
   local device
 
-  if ! rfkill list wifi 2>/dev/null | grep -q 'Soft blocked: yes'; then
+  if device=$(wifi_device) && ! rfkill list wifi 2>/dev/null | grep -q 'blocked: yes'; then
     state=on
     network='Not connected'
-  fi
-
-  if [[ $state == on ]] && device=$(wifi_device); then
     local connected
     connected=$(iwctl station "$device" show 2>/dev/null \
       | sed $'s/\033\[[0-9;]*m//g' \
@@ -34,6 +43,44 @@ wifi_status() {
   fi
 
   printf '%s\t%s\n' "$state" "$network"
+}
+
+trim() {
+  local value=$1
+  value=${value#"${value%%[![:space:]]*}"}
+  value=${value%"${value##*[![:space:]]}"}
+  printf '%s' "$value"
+}
+
+wifi_networks() {
+  local device line name security signal connected known
+  local -A known_networks=()
+
+  device=$(wifi_device) || return 0
+
+  while IFS= read -r line; do
+    [[ -n $line ]] || continue
+    name=$(trim "${line:2:34}")
+    [[ -n $name ]] && known_networks["$name"]=1
+  done < <(LC_ALL=C iwctl known-networks list 2>/dev/null \
+    | sed $'s/\033\[[0-9;]*m//g' \
+    | sed -n '5,$p')
+
+  while IFS= read -r line; do
+    [[ -n $line ]] || continue
+    name=$(trim "${line:6:34}")
+    security=$(trim "${line:40:20}")
+    signal=$(trim "${line:60}")
+    [[ -n $name ]] || continue
+
+    connected=false
+    [[ ${line:2:1} == '>' ]] && connected=true
+    known=false
+    [[ -n ${known_networks["$name"]+x} ]] && known=true
+    printf '%s\t%s\t%s\t%s\t%s\n' "$name" "$security" "$signal" "$connected" "$known"
+  done < <(LC_ALL=C iwctl station "$device" get-networks rssi-dbms 2>/dev/null \
+    | sed $'s/\033\[[0-9;]*m//g' \
+    | sed -n '5,$p')
 }
 
 capture_path() {
@@ -53,11 +100,35 @@ case "$action" in
       rfkill block wifi
     fi
     ;;
+  wifi-list)
+    if ! rfkill list wifi 2>/dev/null | grep -q 'blocked: yes'; then
+      wifi_networks
+    fi
+    ;;
+  wifi-scan)
+    device=$(wifi_device)
+    iwctl station "$device" scan
+    ;;
+  wifi-connect)
+    device=$(wifi_device)
+    network=${2:?network name required}
+    if [[ -n ${3:-} ]]; then
+      iwctl --passphrase "$3" station "$device" connect "$network"
+    else
+      iwctl --dont-ask station "$device" connect "$network"
+    fi
+    ;;
+  wifi-disconnect)
+    device=$(wifi_device)
+    iwctl station "$device" disconnect
+    ;;
   brightness-get)
     brightnessctl -m | awk -F, '{ gsub(/%/, "", $4); print $4; exit }'
     ;;
   brightness-set)
-    brightnessctl set "${2:?brightness percentage required}%" >/dev/null
+    percentage=${2:?brightness percentage required}
+    [[ $percentage =~ ^[0-9]+$ ]] && (( percentage >= 0 && percentage <= 100 ))
+    brightnessctl set "$percentage%" >/dev/null
     ;;
   clipboard-list)
     cliphist list | head -n 50
@@ -99,8 +170,9 @@ case "$action" in
     printf '%s\n' "$output"
     ;;
   record-toggle)
-    if pgrep -x wf-recorder >/dev/null; then
-      pkill -INT -x wf-recorder
+    if pid=$(recording_pid); then
+      kill -INT "$pid"
+      rm -f -- "$recording_pid_file"
       printf 'recording-stopped\n'
     else
       command -v wf-recorder >/dev/null || {
@@ -111,7 +183,15 @@ case "$action" in
       mkdir -p "$directory"
       output="$directory/recording-$(date +%Y%m%d-%H%M%S).mp4"
       wf-recorder -f "$output" >/dev/null 2>&1 &
+      printf '%s\n' "$!" > "$recording_pid_file"
       printf 'recording-started\n'
+    fi
+    ;;
+  record-status)
+    if recording_pid >/dev/null; then
+      printf 'recording-active\n'
+    else
+      printf 'recording-inactive\n'
     fi
     ;;
   power)

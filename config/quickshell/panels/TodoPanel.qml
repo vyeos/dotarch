@@ -99,72 +99,71 @@ FocusScope {
 
         }
 
-        Column {
+        ListView {
             width: parent.width
+            height: count > 0 ? Math.min(6, count) * 43 - 5 : 0
             spacing: 5
+            clip: true
+            interactive: count > 6
+            model: ShellState.todos
 
-            Repeater {
-                model: ShellState.todos
+            delegate: FocusScope {
+                required property var modelData
+                required property int index
 
-                delegate: FocusScope {
-                    required property var modelData
-                    required property int index
+                width: ListView.view.width
+                height: 38
+                activeFocusOnTab: true
+                Keys.onReturnPressed: ShellState.toggleTodo(index)
+                Keys.onEnterPressed: ShellState.toggleTodo(index)
+                Keys.onSpacePressed: ShellState.toggleTodo(index)
 
-                    width: parent.width
-                    height: 38
-                    activeFocusOnTab: true
-                    Keys.onReturnPressed: ShellState.toggleTodo(index)
-                    Keys.onEnterPressed: ShellState.toggleTodo(index)
-                    Keys.onSpacePressed: ShellState.toggleTodo(index)
+                Rectangle {
+                    anchors.fill: parent
+                    radius: Theme.radiusSmall
+                    color: Theme.bg0
+                    opacity: modelData.done ? 0.62 : 1
+                    border.width: parent.activeFocus ? 2 : 0
+                    border.color: Theme.green
+                }
 
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: Theme.radiusSmall
-                        color: Theme.bg0
-                        opacity: modelData.done ? 0.62 : 1
-                        border.width: parent.activeFocus ? 2 : 0
-                        border.color: Theme.green
-                    }
-
-                    Rectangle {
-                        anchors.left: parent.left
-                        anchors.leftMargin: 10
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 16
-                        height: 16
-                        radius: 5
-                        color: modelData.done ? Theme.green : "transparent"
-                        border.width: 2
-                        border.color: modelData.done ? Theme.green : Theme.mutedDark
-
-                        ShellText {
-                            anchors.centerIn: parent
-                            text: modelData.done ? "✓" : ""
-                            color: Theme.bgDim
-                            font.pixelSize: 9
-                            font.weight: Font.Bold
-                        }
-
-                    }
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 10
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 16
+                    height: 16
+                    radius: 5
+                    color: modelData.done ? Theme.green : "transparent"
+                    border.width: 2
+                    border.color: modelData.done ? Theme.green : Theme.mutedDark
 
                     ShellText {
-                        anchors.left: parent.left
-                        anchors.leftMargin: 36
-                        anchors.right: parent.right
-                        anchors.rightMargin: 8
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: modelData.text
-                        color: modelData.done ? Theme.muted : Theme.foreground
-                        font.strikeout: modelData.done
-                        elide: Text.ElideRight
+                        anchors.centerIn: parent
+                        text: modelData.done ? "✓" : ""
+                        color: Theme.bgDim
+                        font.pixelSize: 9
+                        font.weight: Font.Bold
                     }
 
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: ShellState.toggleTodo(index)
-                    }
+                }
 
+                ShellText {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 36
+                    anchors.right: parent.right
+                    anchors.rightMargin: 8
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: modelData.text
+                    color: modelData.done ? Theme.muted : Theme.foreground
+                    font.strikeout: modelData.done
+                    elide: Text.ElideRight
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: ShellState.toggleTodo(index)
                 }
 
             }

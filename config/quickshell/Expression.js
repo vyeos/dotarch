@@ -2,86 +2,83 @@
 
 function evaluate(source) {
     const input = source.replace(/×/g, "*").replace(/÷/g, "/").replace(/\s+/g, "");
-    if (!input || !/^[0-9.+\-*/%()]+$/.test(input))
+    if (!input || input.length > 256 || !/^[0-9.+\-*/%()]+$/.test(input))
         return null;
 
-    const tokens = [];
     let index = 0;
-    let expectsValue = true;
 
-    while (index < input.length) {
-        const char = input[index];
-        if (/\d|\./.test(char)) {
-            let end = index + 1;
-            while (end < input.length && /\d|\./.test(input[end]))
-                end++;
-            const value = Number(input.slice(index, end));
-            if (!Number.isFinite(value))
-                return null;
-            tokens.push(value);
-            index = end;
-            expectsValue = false;
-        } else if (char === "-" && expectsValue) {
-            tokens.push(0);
-            tokens.push("-");
+    function parseNumber() {
+        const match = input.slice(index).match(/^(?:\d+(?:\.\d*)?|\.\d+)/);
+        if (!match)
+            return null;
+
+        index += match[0].length;
+        const value = Number(match[0]);
+        return Number.isFinite(value) ? value : null;
+    }
+
+    function parsePrimary() {
+        if (input[index] !== "(")
+            return parseNumber();
+
+        index++;
+        const value = parseExpression();
+        if (value === null || input[index] !== ")")
+            return null;
+
+        index++;
+        return value;
+    }
+
+    function parseUnary() {
+        if (input[index] === "+") {
             index++;
-        } else if ("+-*/%()".includes(char)) {
-            tokens.push(char);
+            return parseUnary();
+        }
+        if (input[index] === "-") {
             index++;
-            expectsValue = char !== ")";
-        } else {
-            return null;
+            const value = parseUnary();
+            return value === null ? null : -value;
         }
+        return parsePrimary();
     }
 
-    const output = [];
-    const operators = [];
-    const precedence = { "+": 1, "-": 1, "*": 2, "/": 2, "%": 2 };
+    function parseTerm() {
+        let value = parseUnary();
+        if (value === null)
+            return null;
 
-    for (const token of tokens) {
-        if (typeof token === "number") {
-            output.push(token);
-        } else if (token === "(") {
-            operators.push(token);
-        } else if (token === ")") {
-            while (operators.length && operators[operators.length - 1] !== "(")
-                output.push(operators.pop());
-            if (operators.pop() !== "(")
+        while (index < input.length && "*/%".includes(input[index])) {
+            const operator = input[index++];
+            const right = parseUnary();
+            if (right === null || ((operator === "/" || operator === "%") && right === 0))
                 return null;
-        } else {
-            while (operators.length && precedence[operators[operators.length - 1]] >= precedence[token])
-                output.push(operators.pop());
-            operators.push(token);
+
+            if (operator === "*") value *= right;
+            if (operator === "/") value /= right;
+            if (operator === "%") value %= right;
         }
+        return value;
     }
 
-    while (operators.length) {
-        const operator = operators.pop();
-        if (operator === "(")
+    function parseExpression() {
+        let value = parseTerm();
+        if (value === null)
             return null;
-        output.push(operator);
-    }
 
-    const stack = [];
-    for (const token of output) {
-        if (typeof token === "number") {
-            stack.push(token);
-            continue;
+        while (index < input.length && "+-".includes(input[index])) {
+            const operator = input[index++];
+            const right = parseTerm();
+            if (right === null)
+                return null;
+
+            value = operator === "+" ? value + right : value - right;
         }
-        if (stack.length < 2)
-            return null;
-        const right = stack.pop();
-        const left = stack.pop();
-        if ((token === "/" || token === "%") && right === 0)
-            return null;
-        if (token === "+") stack.push(left + right);
-        if (token === "-") stack.push(left - right);
-        if (token === "*") stack.push(left * right);
-        if (token === "/") stack.push(left / right);
-        if (token === "%") stack.push(left % right);
+        return value;
     }
 
-    if (stack.length !== 1 || !Number.isFinite(stack[0]))
+    const result = parseExpression();
+    if (result === null || index !== input.length || !Number.isFinite(result))
         return null;
-    return Math.round(stack[0] * 100000000) / 100000000;
+    return Math.round(result * 100000000) / 100000000;
 }

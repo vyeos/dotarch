@@ -27,6 +27,9 @@ Singleton {
     property alias todos: persistence.todos
 
     function show(name) {
+        if (name !== "clock" && panelWidths[name] === undefined)
+            return ;
+
         panel = panel === name ? "clock" : name;
     }
 

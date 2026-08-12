@@ -15,9 +15,134 @@ FocusScope {
     readonly property var sink: Pipewire.defaultAudioSink
     readonly property var player: Mpris.players.values.length > 0 ? Mpris.players.values[0] : null
     readonly property var adapter: Bluetooth.defaultAdapter
+    readonly property var audioSinks: Pipewire.nodes.values.filter((node) => {
+        return node.isSink && !node.isStream && node.audio;
+    })
+    readonly property var bluetoothDevices: adapter ? adapter.devices.values.filter((device) => {
+        return device.name || device.deviceName;
+    }).slice().sort((left, right) => {
+        if (left.connected !== right.connected)
+            return left.connected ? -1 : 1;
+
+        if (left.paired !== right.paired)
+            return left.paired ? -1 : 1;
+
+        return (left.name || left.deviceName).localeCompare(right.name || right.deviceName);
+    }) : []
     readonly property var connectedDevices: adapter ? adapter.devices.values.filter((device) => {
         return device.connected;
     }) : []
+    property string expandedSection: ""
+    property string displayedSection: ""
+    property var pendingWifiNetwork: null
+
+    function toggleSection(section) {
+        const nextSection = expandedSection === section ? "" : section;
+        if (expandedSection === "bluetooth" && nextSection !== "bluetooth")
+            stopBluetoothDiscovery();
+
+        expandedSection = nextSection;
+        if (nextSection) {
+            sectionCloseTimer.stop();
+            displayedSection = nextSection;
+        } else {
+            sectionCloseTimer.restart();
+        }
+        pendingWifiNetwork = null;
+        if (nextSection === "wifi")
+            Backend.scanWifi();
+        else if (nextSection === "bluetooth")
+            startBluetoothDiscovery();
+    }
+
+    function startBluetoothDiscovery() {
+        if (!adapter || !adapter.enabled)
+            return ;
+
+        adapter.discovering = true;
+        bluetoothScanTimer.restart();
+    }
+
+    function stopBluetoothDiscovery() {
+        bluetoothScanTimer.stop();
+        if (adapter && adapter.discovering)
+            adapter.discovering = false;
+
+    }
+
+    function selectWifi(network) {
+        if (Backend.wifiConnecting)
+            return ;
+
+        if (network.connected) {
+            Backend.disconnectWifi();
+            return ;
+        }
+        if (network.security !== "open" && !network.known) {
+            pendingWifiNetwork = network;
+            Qt.callLater(() => {
+                return wifiPasswordInput.forceActiveFocus(Qt.TabFocusReason);
+            });
+            return ;
+        }
+        Backend.connectWifi(network.name, "");
+    }
+
+    function connectPendingWifi() {
+        if (!pendingWifiNetwork || !wifiPasswordInput.text)
+            return ;
+
+        Backend.connectWifi(pendingWifiNetwork.name, wifiPasswordInput.text);
+        wifiPasswordInput.clear();
+        pendingWifiNetwork = null;
+    }
+
+    function activateBluetoothDevice(device) {
+        if (device.connected) {
+            device.disconnect();
+        } else if (device.paired || device.bonded) {
+            device.connect();
+        } else {
+            device.trusted = true;
+            device.pair();
+        }
+    }
+
+    function bluetoothIcon(device) {
+        const iconName = (device.icon || "").toLowerCase();
+        if (iconName.indexOf("head") >= 0 || iconName.indexOf("audio") >= 0)
+            return "󰋋";
+
+        if (iconName.indexOf("mouse") >= 0)
+            return "󰍽";
+
+        if (iconName.indexOf("keyboard") >= 0)
+            return "󰌌";
+
+        return "󰂯";
+    }
+
+    function wifiSignalDbm(signal) {
+        const value = Number(signal);
+        if (!Number.isFinite(value))
+            return null;
+
+        return Math.round(value < -200 ? value / 100 : value);
+    }
+
+    function wifiSignalIcon(signal) {
+        const dbm = wifiSignalDbm(signal);
+        if (dbm === null)
+            return "󰤯";
+
+        if (dbm >= -55)
+            return "󰤨";
+
+        if (dbm >= -70)
+            return "󰤢";
+
+        return "󰤟";
+    }
 
     function formatDuration(seconds) {
         if (!Number.isFinite(seconds) || seconds < 0)
@@ -28,10 +153,49 @@ FocusScope {
     }
 
     implicitWidth: 492
-    implicitHeight: content.implicitHeight
+    readonly property real collapsedImplicitHeight: content.implicitHeight - devicePicker.height - (devicePicker.visible ? content.spacing : 0)
+    implicitHeight: collapsedImplicitHeight + (root.expandedSection ? devicePicker.expandedHeight + content.spacing : 0)
 
     PwObjectTracker {
-        objects: [root.sink]
+        objects: root.audioSinks
+    }
+
+    Timer {
+        id: bluetoothScanTimer
+
+        interval: 12000
+        onTriggered: root.stopBluetoothDiscovery()
+    }
+
+    Timer {
+        id: sectionCloseTimer
+
+        interval: Theme.animationNormal
+        onTriggered: {
+            if (!root.expandedSection)
+                root.displayedSection = "";
+        }
+    }
+
+    Connections {
+        function onEnabledChanged() {
+            if (root.adapter && root.adapter.enabled && root.expandedSection === "bluetooth")
+                root.startBluetoothDiscovery();
+
+        }
+
+        target: root.adapter
+    }
+
+    Connections {
+        function onPanelChanged() {
+            if (ShellState.panel !== "control")
+                root.stopBluetoothDiscovery();
+            else if (root.expandedSection === "bluetooth")
+                root.startBluetoothDiscovery();
+        }
+
+        target: ShellState
     }
 
     Timer {
@@ -63,7 +227,9 @@ FocusScope {
                 title: "Wi-Fi"
                 subtitle: Backend.wifiName
                 active: Backend.wifiEnabled
-                onClicked: Backend.toggleWifi()
+                expandable: true
+                expanded: root.expandedSection === "wifi"
+                onClicked: root.toggleSection("wifi")
             }
 
             ActionTile {
@@ -72,10 +238,10 @@ FocusScope {
                 title: "Audio"
                 subtitle: root.sink ? (root.sink.description || root.sink.nickname || "Default output") : "No output"
                 active: root.sink && root.sink.audio && !root.sink.audio.muted
+                expandable: true
+                expanded: root.expandedSection === "audio"
                 onClicked: {
-                    if (root.sink && root.sink.audio)
-                        root.sink.audio.muted = !root.sink.audio.muted;
-
+                    root.toggleSection("audio");
                 }
             }
 
@@ -85,11 +251,310 @@ FocusScope {
                 title: "Bluetooth"
                 subtitle: root.connectedDevices.length > 0 ? root.connectedDevices[0].name : (root.adapter && root.adapter.enabled ? "On" : "Off")
                 active: root.adapter && root.adapter.enabled
+                expandable: true
+                expanded: root.expandedSection === "bluetooth"
                 onClicked: {
-                    if (root.adapter)
-                        root.adapter.enabled = !root.adapter.enabled;
+                    root.toggleSection("bluetooth");
+                }
+            }
+
+        }
+
+        Rectangle {
+            id: devicePicker
+
+            readonly property int expandedHeight: 204
+
+            width: parent.width
+            height: root.expandedSection ? expandedHeight : 0
+            radius: Theme.radius
+            color: Theme.bg0
+            clip: true
+            enabled: root.expandedSection !== ""
+            visible: height > 0
+            opacity: root.expandedSection ? 1 : 0
+
+            Item {
+                id: pickerHeader
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.margins: 8
+                height: 30
+
+                Column {
+                    anchors.left: parent.left
+                    anchors.right: powerButton.left
+                    anchors.rightMargin: 8
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 1
+
+                    ShellText {
+                        width: parent.width
+                        text: root.displayedSection === "wifi" ? "Wi-Fi networks" : (root.displayedSection === "audio" ? "Sound output" : "Bluetooth devices")
+                        font.pixelSize: 10
+                        font.weight: Font.Bold
+                    }
+
+                    ShellText {
+                        width: parent.width
+                        text: {
+                            if (root.displayedSection === "wifi")
+                                return Backend.wifiError || (Backend.wifiScanning ? "Scanning…" : Backend.wifiNetworks.length + " available");
+
+                            if (root.displayedSection === "audio")
+                                return root.audioSinks.length + " available";
+
+                            return root.adapter && root.adapter.discovering ? "Looking for devices…" : root.bluetoothDevices.length + " available";
+                        }
+                        color: Backend.wifiError && root.displayedSection === "wifi" ? Theme.red : Theme.muted
+                        elide: Text.ElideRight
+                        font.pixelSize: 8
+                    }
 
                 }
+
+                IconButton {
+                    id: powerButton
+
+                    anchors.right: scanButton.visible ? scanButton.left : parent.right
+                    anchors.rightMargin: scanButton.visible ? 5 : 0
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 25
+                    height: 25
+                    icon: root.displayedSection === "audio" ? (root.sink && root.sink.audio && root.sink.audio.muted ? "󰝟" : "󰕾") : "󰐥"
+                    accessibleName: {
+                        if (root.displayedSection === "wifi")
+                            return Backend.wifiEnabled ? "Turn Wi-Fi off" : "Turn Wi-Fi on";
+
+                        if (root.displayedSection === "audio")
+                            return root.sink && root.sink.audio && root.sink.audio.muted ? "Unmute audio" : "Mute audio";
+
+                        return root.adapter && root.adapter.enabled ? "Turn Bluetooth off" : "Turn Bluetooth on";
+                    }
+                    foregroundColor: {
+                        if (root.displayedSection === "wifi")
+                            return Backend.wifiEnabled ? Theme.green : Theme.muted;
+
+                        if (root.displayedSection === "audio")
+                            return root.sink && root.sink.audio && !root.sink.audio.muted ? Theme.green : Theme.muted;
+
+                        return root.adapter && root.adapter.enabled ? Theme.green : Theme.muted;
+                    }
+                    onClicked: {
+                        if (root.displayedSection === "wifi")
+                            Backend.toggleWifi();
+                        else if (root.displayedSection === "audio" && root.sink && root.sink.audio)
+                            root.sink.audio.muted = !root.sink.audio.muted;
+                        else if (root.adapter)
+                            root.adapter.enabled = !root.adapter.enabled;
+                    }
+                }
+
+                IconButton {
+                    id: scanButton
+
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 25
+                    height: 25
+                    visible: root.displayedSection === "wifi" || root.displayedSection === "bluetooth"
+                    enabled: root.displayedSection === "wifi" ? Backend.wifiEnabled && !Backend.wifiScanning : root.adapter && root.adapter.enabled && !root.adapter.discovering
+                    icon: "󰑐"
+                    accessibleName: root.displayedSection === "wifi" ? "Scan for Wi-Fi networks" : "Scan for Bluetooth devices"
+                    foregroundColor: enabled ? Theme.foreground : Theme.mutedDark
+                    onClicked: {
+                        if (root.displayedSection === "wifi")
+                            Backend.scanWifi();
+                        else
+                            root.startBluetoothDiscovery();
+                    }
+                }
+
+            }
+
+            ListView {
+                id: wifiList
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: pickerHeader.bottom
+                anchors.bottom: wifiPasswordRow.top
+                anchors.leftMargin: 7
+                anchors.rightMargin: 7
+                anchors.topMargin: 5
+                anchors.bottomMargin: wifiPasswordRow.height > 0 ? 5 : 7
+                visible: root.displayedSection === "wifi"
+                clip: true
+                spacing: 4
+                model: Backend.wifiNetworks
+
+                delegate: ConnectionRow {
+                    required property var modelData
+
+                    width: wifiList.width
+                    icon: root.wifiSignalIcon(modelData.signal)
+                    title: modelData.name
+                    subtitle: (modelData.security === "open" ? "Open network" : modelData.security.toUpperCase()) + "  ·  " + (root.wifiSignalDbm(modelData.signal) === null ? "Signal unknown" : root.wifiSignalDbm(modelData.signal) + " dBm")
+                    active: modelData.connected
+                    busy: Backend.wifiConnecting === modelData.name
+                    actionText: modelData.connected ? "Disconnect" : (modelData.security !== "open" && !modelData.known ? "Password" : "Connect")
+                    onClicked: root.selectWifi(modelData)
+                }
+
+            }
+
+            Rectangle {
+                id: wifiPasswordRow
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                anchors.margins: pendingWifiNetwork ? 7 : 0
+                height: pendingWifiNetwork ? 39 : 0
+                visible: height > 0 && root.displayedSection === "wifi"
+                radius: Theme.radiusSmall
+                color: Theme.bg1
+                border.width: wifiPasswordInput.activeFocus ? 1 : 0
+                border.color: Theme.green
+
+                TextInput {
+                    id: wifiPasswordInput
+
+                    anchors.left: parent.left
+                    anchors.right: wifiConnectButton.left
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    anchors.leftMargin: 10
+                    anchors.rightMargin: 8
+                    color: Theme.foreground
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 10
+                    echoMode: TextInput.Password
+                    passwordCharacter: "•"
+                    activeFocusOnTab: visible
+                    Keys.onReturnPressed: root.connectPendingWifi()
+                    Keys.onEnterPressed: root.connectPendingWifi()
+
+                    ShellText {
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: !parent.text
+                        text: "Password for " + (root.pendingWifiNetwork ? root.pendingWifiNetwork.name : "network")
+                        color: Theme.mutedDark
+                        font.pixelSize: 9
+                    }
+
+                }
+
+                FocusScope {
+                    id: wifiConnectButton
+
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    width: 67
+                    activeFocusOnTab: visible
+                    Keys.onReturnPressed: root.connectPendingWifi()
+                    Keys.onEnterPressed: root.connectPendingWifi()
+                    Keys.onSpacePressed: root.connectPendingWifi()
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: Theme.radiusSmall
+                        color: Theme.green
+                    }
+
+                    ShellText {
+                        anchors.centerIn: parent
+                        text: "Connect"
+                        color: Theme.bgDim
+                        font.pixelSize: 9
+                        font.weight: Font.Bold
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.connectPendingWifi()
+                    }
+
+                }
+
+            }
+
+            ListView {
+                id: audioList
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: pickerHeader.bottom
+                anchors.bottom: parent.bottom
+                anchors.margins: 7
+                anchors.topMargin: 5
+                visible: root.displayedSection === "audio"
+                clip: true
+                spacing: 4
+                model: root.audioSinks
+
+                delegate: ConnectionRow {
+                    required property var modelData
+                    readonly property bool isDefault: root.sink && modelData.id === root.sink.id
+
+                    width: audioList.width
+                    icon: isDefault ? "󰕾" : "󰓃"
+                    title: modelData.description || modelData.nickname || modelData.name
+                    subtitle: modelData.nickname && modelData.nickname !== title ? modelData.nickname : "Audio output"
+                    active: isDefault
+                    actionText: isDefault ? "Connected" : "Switch"
+                    onClicked: Pipewire.preferredDefaultAudioSink = modelData
+                }
+
+            }
+
+            ListView {
+                id: bluetoothList
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: pickerHeader.bottom
+                anchors.bottom: parent.bottom
+                anchors.margins: 7
+                anchors.topMargin: 5
+                visible: root.displayedSection === "bluetooth"
+                clip: true
+                spacing: 4
+                model: root.bluetoothDevices
+
+                delegate: ConnectionRow {
+                    required property var modelData
+
+                    width: bluetoothList.width
+                    icon: root.bluetoothIcon(modelData)
+                    title: modelData.name || modelData.deviceName || modelData.address
+                    subtitle: modelData.batteryAvailable ? "Battery " + Math.round(modelData.battery * 100) + "%" : (modelData.paired ? "Paired" : "Available")
+                    active: modelData.connected
+                    busy: modelData.pairing || modelData.state === BluetoothDeviceState.Connecting || modelData.state === BluetoothDeviceState.Disconnecting
+                    actionText: modelData.connected ? "Disconnect" : (modelData.paired || modelData.bonded ? "Connect" : "Pair")
+                    onClicked: root.activateBluetoothDevice(modelData)
+                }
+
+            }
+
+            Behavior on height {
+                NumberAnimation {
+                    duration: Theme.animationNormal
+                    easing.type: Easing.OutCubic
+                }
+
+            }
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: Theme.animationNormal
+                    easing.type: Easing.OutCubic
+                }
+
             }
 
         }
@@ -132,7 +597,7 @@ FocusScope {
                 source: root.player ? root.player.trackArtUrl : ""
                 fillMode: Image.PreserveAspectCrop
                 opacity: status === Image.Ready ? 0.26 : 0
-                layer.enabled: true
+                layer.enabled: status === Image.Ready
 
                 layer.effect: MultiEffect {
                     autoPaddingEnabled: false
@@ -142,7 +607,7 @@ FocusScope {
                         width: mediaArtwork.width
                         height: mediaArtwork.height
                         radius: Theme.radius
-                        layer.enabled: true
+                        layer.enabled: mediaArtwork.status === Image.Ready
                     }
 
                 }

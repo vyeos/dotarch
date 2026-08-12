@@ -117,21 +117,6 @@ PanelWindow {
                 event.accepted = true;
                 return ;
             }
-            if (event.key === Qt.Key_Left && event.modifiers === Qt.NoModifier) {
-                ShellState.cycle(-1);
-                event.accepted = true;
-                return ;
-            }
-            if (event.key === Qt.Key_Right && event.modifiers === Qt.NoModifier) {
-                ShellState.cycle(1);
-                event.accepted = true;
-                return ;
-            }
-            if (event.key >= Qt.Key_1 && event.key <= Qt.Key_7 && event.modifiers === Qt.NoModifier) {
-                const panels = ["clock", "control", "launcher", "clipboard", "todo", "capture", "power"];
-                ShellState.panel = panels[event.key - Qt.Key_1];
-                event.accepted = true;
-            }
         }
 
         Rectangle {

@@ -12,19 +12,16 @@ FocusScope {
 
     function setFromX(x) {
         const next = Math.max(0, Math.min(1, x / track.width));
-        value = next;
         moved(next);
     }
 
     implicitHeight: 40
     activeFocusOnTab: true
     Keys.onLeftPressed: {
-        value = Math.max(0, value - 0.05);
-        moved(value);
+        moved(Math.max(0, value - 0.05));
     }
     Keys.onRightPressed: {
-        value = Math.min(1, value + 0.05);
-        moved(value);
+        moved(Math.min(1, value + 0.05));
     }
     Accessible.role: Accessible.Slider
     Accessible.name: accessibleName

@@ -8,6 +8,8 @@ FocusScope {
     property string title: ""
     property string subtitle: ""
     property bool active: false
+    property bool expandable: false
+    property bool expanded: false
 
     signal clicked()
 
@@ -59,7 +61,7 @@ FocusScope {
 
         Column {
             anchors.verticalCenter: parent.verticalCenter
-            width: parent.width - 38
+            width: parent.width - 38 - (root.expandable ? 15 : 0)
             spacing: 2
 
             ShellText {
@@ -79,6 +81,14 @@ FocusScope {
                 font.pixelSize: 9
             }
 
+        }
+
+        ShellText {
+            anchors.verticalCenter: parent.verticalCenter
+            visible: root.expandable
+            text: root.expanded ? "󰅃" : "󰅀"
+            color: root.active ? Qt.rgba(0.12, 0.14, 0.12, 0.62) : Theme.mutedDark
+            font.pixelSize: 11
         }
 
     }

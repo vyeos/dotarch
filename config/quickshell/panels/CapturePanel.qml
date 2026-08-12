@@ -216,9 +216,9 @@ FocusScope {
 
         ShellText {
             width: parent.width
-            visible: Backend.lastCapture.length > 0
-            text: Backend.lastCapture
-            color: Theme.muted
+            visible: Backend.lastError.length > 0 || Backend.lastCapture.length > 0
+            text: Backend.lastError || Backend.lastCapture
+            color: Backend.lastError ? Theme.red : Theme.muted
             elide: Text.ElideMiddle
             font.pixelSize: 8
         }
