@@ -14,10 +14,12 @@ PanelWindow {
     readonly property int cornerWing: 16
     readonly property int canvasWidth: 552
     readonly property int canvasHeight: 600
-    readonly property int requestedBottomPadding: contentPadding
-    readonly property int displayedBottomPadding: displayedPanel === "control" && controlPanel.edgeToEdgeDetail ? 0 : contentPadding
+    readonly property int requestedTopPadding: ShellState.panel === "launcher" ? 10 : contentPadding
+    readonly property int requestedBottomPadding: ShellState.panel === "launcher" ? 4 : contentPadding
+    readonly property int displayedTopPadding: displayedPanel === "launcher" ? 10 : contentPadding
+    readonly property int displayedBottomPadding: displayedPanel === "launcher" ? 4 : displayedPanel === "control" && controlPanel.edgeToEdgeDetail ? 0 : contentPadding
     readonly property real targetVisualWidth: ShellState.targetWidth + cornerWing * 2
-    readonly property real targetVisualHeight: ShellState.expanded ? panelContentHeight + contentPadding + requestedBottomPadding : collapsedHeight
+    readonly property real targetVisualHeight: ShellState.expanded ? panelContentHeight + requestedTopPadding + requestedBottomPadding : collapsedHeight
     readonly property real panelContentHeight: ShellState.expanded ? Math.max(ShellState.panelHeights[ShellState.panel] || 0, requestedPanel ? requestedPanel.implicitHeight : 0) : 0
     readonly property real batteryLevel: UPower.displayDevice ? UPower.displayDevice.percentage : 0
     readonly property bool batteryCharging: UPower.displayDevice && (!UPower.onBattery || UPower.displayDevice.state === UPowerDeviceState.Charging || UPower.displayDevice.state === UPowerDeviceState.PendingCharge)
@@ -285,7 +287,7 @@ PanelWindow {
             anchors.bottom: parent.bottom
             anchors.leftMargin: window.contentPadding
             anchors.rightMargin: window.contentPadding
-            anchors.topMargin: window.contentPadding
+            anchors.topMargin: window.displayedTopPadding
             anchors.bottomMargin: window.displayedBottomPadding
             visible: opacity > 0
             opacity: window.contentRevealed ? 1 : 0

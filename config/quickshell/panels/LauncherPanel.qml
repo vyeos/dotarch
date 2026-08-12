@@ -16,11 +16,27 @@ FocusScope {
         searchInput.forceActiveFocus(Qt.TabFocusReason);
     }
 
+    function moveSelection(offset) {
+        const count = filteredApps.values.length;
+        if (count === 0) {
+            selectedIndex = 0;
+            return ;
+        }
+
+        selectedIndex = Math.max(0, Math.min(count - 1, selectedIndex + offset));
+        results.positionViewAtIndex(selectedIndex, ListView.Contain);
+    }
+
+    function resetSelection() {
+        selectedIndex = 0;
+        Qt.callLater(() => results.positionViewAtBeginning());
+    }
+
     Connections {
         function onPanelChanged() {
             if (ShellState.panel !== "launcher") {
                 searchInput.clear();
-                root.selectedIndex = 0;
+                root.resetSelection();
             }
         }
 
@@ -50,18 +66,10 @@ FocusScope {
         width: parent.width
         spacing: 8
 
-        PanelHeader {
-            title: "Launcher"
-            onCloseRequested: ShellState.close()
-        }
-
         Rectangle {
             width: parent.width
             height: 42
-            radius: Theme.radiusSmall
-            color: Theme.bg0
-            border.width: searchInput.activeFocus ? 2 : 1
-            border.color: searchInput.activeFocus ? Theme.green : Theme.bg2
+            color: "transparent"
 
             ShellText {
                 anchors.left: parent.left
@@ -77,8 +85,8 @@ FocusScope {
 
                 anchors.left: parent.left
                 anchors.leftMargin: 38
-                anchors.right: keyHint.left
-                anchors.rightMargin: 8
+                anchors.right: parent.right
+                anchors.rightMargin: 10
                 anchors.verticalCenter: parent.verticalCenter
                 color: Theme.foreground
                 font.family: Theme.fontFamily
@@ -86,9 +94,9 @@ FocusScope {
                 clip: true
                 selectByMouse: true
                 activeFocusOnTab: true
-                onTextChanged: root.selectedIndex = 0
-                Keys.onDownPressed: root.selectedIndex = Math.min(filteredApps.values.length - 1, root.selectedIndex + 1)
-                Keys.onUpPressed: root.selectedIndex = Math.max(0, root.selectedIndex - 1)
+                onTextChanged: root.resetSelection()
+                Keys.onDownPressed: root.moveSelection(1)
+                Keys.onUpPressed: root.moveSelection(-1)
                 Keys.onReturnPressed: root.activateSelection()
                 Keys.onEnterPressed: root.activateSelection()
                 Keys.onEscapePressed: ShellState.close()
@@ -100,16 +108,6 @@ FocusScope {
                     visible: !parent.text
                 }
 
-            }
-
-            ShellText {
-                id: keyHint
-
-                anchors.right: parent.right
-                anchors.rightMargin: 10
-                anchors.verticalCenter: parent.verticalCenter
-                text: "↵"
-                color: Theme.muted
             }
 
         }
@@ -207,7 +205,17 @@ FocusScope {
                     const genericName = String(entry.genericName || "").toLowerCase();
                     const keywords = entry.keywords ? entry.keywords.join(" ").toLowerCase() : "";
                     return !query || name.includes(query) || genericName.includes(query) || keywords.includes(query);
-                }).slice(0, 5)
+                }).sort((left, right) => {
+                    const leftName = String(left.name || "").toLowerCase();
+                    const rightName = String(right.name || "").toLowerCase();
+                    if (leftName < rightName)
+                        return -1;
+
+                    if (leftName > rightName)
+                        return 1;
+
+                    return String(left.name || "").localeCompare(String(right.name || ""));
+                })
             }
 
             delegate: Rectangle {
@@ -227,8 +235,7 @@ FocusScope {
                     Rectangle {
                         width: 32
                         height: 32
-                        radius: Theme.radiusSmall
-                        color: Theme.bg2
+                        color: "transparent"
 
                         IconImage {
                             anchors.centerIn: parent

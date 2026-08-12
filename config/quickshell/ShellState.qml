@@ -15,7 +15,7 @@ Singleton {
     })
     readonly property var panelHeights: ({
         "control": 320,
-        "launcher": 330,
+        "launcher": 290,
         "clipboard": 80,
         "todo": 87,
         "capture": 199,
