@@ -26,9 +26,9 @@ FocusScope {
     Rectangle {
         anchors.fill: parent
         radius: Theme.radius
-        color: root.active ? Theme.green : Theme.bg0
+        color: root.active ? Theme.primary : Theme.bg0
         border.width: root.activeFocus || detailButton.activeFocus ? 2 : 0
-        border.color: Theme.foreground
+        border.color: Theme.primary
 
         Behavior on color {
             ColorAnimation {

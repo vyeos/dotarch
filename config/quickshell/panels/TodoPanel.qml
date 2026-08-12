@@ -34,7 +34,7 @@ FocusScope {
                 radius: Theme.radiusSmall
                 color: Theme.bg0
                 border.width: todoInput.activeFocus ? 2 : 1
-                border.color: todoInput.activeFocus ? Theme.green : Theme.bg2
+                border.color: todoInput.activeFocus ? Theme.primary : Theme.bg2
 
                 TextInput {
                     id: todoInput
@@ -77,9 +77,9 @@ FocusScope {
                 Rectangle {
                     anchors.fill: parent
                     radius: Theme.radiusSmall
-                    color: Theme.green
+                    color: Theme.primary
                     border.width: parent.activeFocus ? 2 : 0
-                    border.color: Theme.foreground
+                    border.color: Theme.primary
                 }
 
                 ShellText {
@@ -124,7 +124,7 @@ FocusScope {
                     color: Theme.bg0
                     opacity: modelData.done ? 0.62 : 1
                     border.width: parent.activeFocus ? 2 : 0
-                    border.color: Theme.green
+                    border.color: Theme.primary
                 }
 
                 Rectangle {
@@ -134,9 +134,9 @@ FocusScope {
                     width: 16
                     height: 16
                     radius: 5
-                    color: modelData.done ? Theme.green : "transparent"
+                    color: modelData.done ? Theme.primary : "transparent"
                     border.width: 2
-                    border.color: modelData.done ? Theme.green : Theme.mutedDark
+                    border.color: modelData.done ? Theme.primary : Theme.mutedDark
 
                     ShellText {
                         anchors.centerIn: parent

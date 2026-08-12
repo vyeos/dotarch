@@ -449,7 +449,7 @@ FocusScope {
                 height: 2
                 radius: 1
                 visible: devicePicker.audioMode
-                color: Theme.green
+                color: Theme.primary
             }
 
             Item {
@@ -513,12 +513,12 @@ FocusScope {
                     }
                     foregroundColor: {
                         if (root.displayedSection === "wifi")
-                            return Networking.wifiEnabled ? Theme.green : Theme.muted;
+                            return Networking.wifiEnabled ? Theme.primary : Theme.muted;
 
                         if (root.displayedSection === "audio")
-                            return root.sink && root.sink.audio && !root.sink.audio.muted ? Theme.green : Theme.muted;
+                            return root.sink && root.sink.audio && !root.sink.audio.muted ? Theme.primary : Theme.muted;
 
-                        return root.adapter && root.adapter.enabled ? Theme.green : Theme.muted;
+                        return root.adapter && root.adapter.enabled ? Theme.primary : Theme.muted;
                     }
                     onClicked: {
                         if (root.displayedSection === "wifi")
@@ -616,7 +616,7 @@ FocusScope {
                 radius: Theme.radiusSmall
                 color: Theme.bg1
                 border.width: wifiPasswordInput.activeFocus ? 1 : 0
-                border.color: Theme.green
+                border.color: Theme.primary
 
                 TextInput {
                     id: wifiPasswordInput
@@ -661,7 +661,7 @@ FocusScope {
                     Rectangle {
                         anchors.fill: parent
                         radius: Theme.radiusSmall
-                        color: Theme.green
+                        color: Theme.primary
                     }
 
                     ShellText {
@@ -968,7 +968,7 @@ FocusScope {
 
                 GradientStop {
                     position: 0
-                    color: Theme.bgGreen
+                    color: Theme.primaryContainer
                 }
 
                 GradientStop {

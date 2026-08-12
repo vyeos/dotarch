@@ -115,7 +115,7 @@ FocusScope {
             width: parent.width
             height: root.hasAnswer ? 64 : 0
             radius: Theme.radiusSmall
-            color: Theme.bgGreen
+            color: Theme.primaryContainer
             opacity: root.hasAnswer ? 1 : 0
             clip: true
 
@@ -133,7 +133,7 @@ FocusScope {
 
                 ShellText {
                     text: root.hasAnswer ? String(root.answer) : ""
-                    color: Theme.green
+                    color: Theme.primary
                     font.pixelSize: 24
                     font.weight: Font.Bold
                 }
@@ -197,7 +197,7 @@ FocusScope {
                 width: results.width
                 height: 44
                 radius: Theme.radiusSmall
-                color: index === root.selectedIndex && !root.hasAnswer ? Theme.bg1 : "transparent"
+                color: index === root.selectedIndex && !root.hasAnswer ? Theme.primaryContainer : "transparent"
 
                 Row {
                     anchors.fill: parent

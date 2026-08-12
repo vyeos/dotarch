@@ -31,7 +31,7 @@ FocusScope {
         radius: height / 2
         color: Theme.bg0
         border.width: root.activeFocus ? 2 : 0
-        border.color: Theme.green
+        border.color: Theme.primary
     }
 
     Item {
@@ -46,7 +46,7 @@ FocusScope {
             anchors.bottom: parent.bottom
             width: Math.max(height, parent.width * root.value)
             radius: height / 2
-            color: Theme.green
+            color: Theme.primary
         }
 
         ShellText {

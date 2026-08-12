@@ -3,7 +3,7 @@ import Quickshell
 pragma Singleton
 
 Singleton {
-    readonly property color bgDim: "#1e2326"
+    readonly property color bgDim: "#000000"
     readonly property color bg0: "#272e33"
     readonly property color bg1: "#2e383c"
     readonly property color bg2: "#374145"
@@ -17,6 +17,8 @@ Singleton {
     readonly property color red: "#e67e80"
     readonly property color yellow: "#dbbc7f"
     readonly property color green: "#a7c080"
+    readonly property color primary: green
+    readonly property color primaryContainer: bgGreen
     readonly property color blue: "#7fbbb3"
     readonly property color aqua: "#83c092"
     readonly property color orange: "#e69875"

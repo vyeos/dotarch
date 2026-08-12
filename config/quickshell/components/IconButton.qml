@@ -23,9 +23,9 @@ FocusScope {
     Rectangle {
         anchors.fill: parent
         radius: width / 2
-        color: root.activeFocus || pointer.containsMouse ? Theme.bg1 : root.backgroundColor
+        color: root.activeFocus || pointer.containsMouse ? Theme.primaryContainer : root.backgroundColor
         border.width: root.activeFocus ? 2 : 0
-        border.color: Theme.green
+        border.color: Theme.primary
 
         Behavior on color {
             ColorAnimation {

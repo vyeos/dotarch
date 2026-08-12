@@ -241,7 +241,7 @@ PanelWindow {
                     verticalAlignment: Text.AlignVCenter
                     rightPadding: 8
                     text: (window.batteryCharging ? "" : "󰁹") + " " + Math.round(window.batteryLevel * 100) + "%"
-                    color: window.batteryLevel < 0.2 ? Theme.red : Theme.green
+                    color: window.batteryLevel < 0.2 ? Theme.red : Theme.primary
                     font.pixelSize: 11
                 }
 

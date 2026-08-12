@@ -9,7 +9,7 @@ FocusScope {
     property string mode: "region"
     property bool recordingMode: false
     readonly property var source: Pipewire.defaultAudioSource
-    readonly property color accent: recordingMode ? Theme.red : Theme.green
+    readonly property color accent: recordingMode ? Theme.red : Theme.primary
     readonly property var currentMode: {
         const modes = {
             "full": {
@@ -155,7 +155,7 @@ FocusScope {
 
                             ShellText {
                                 text: kindButton.modelData.icon
-                                color: kindButton.selected ? (kindButton.modelData.recording ? Theme.red : Theme.green) : Theme.mutedDark
+                                color: kindButton.selected ? (kindButton.modelData.recording ? Theme.red : Theme.primary) : Theme.mutedDark
                                 font.pixelSize: 11
                             }
 
@@ -237,7 +237,7 @@ FocusScope {
                             Rectangle {
                                 anchors.fill: parent
                                 radius: 5
-                                color: targetButton.selected ? Theme.bgGreen : (targetPointer.containsMouse ? Theme.bg1 : "transparent")
+                                color: targetButton.selected ? Theme.primaryContainer : (targetPointer.containsMouse ? Theme.bg1 : "transparent")
                                 border.width: targetButton.activeFocus ? 1 : 0
                                 border.color: root.accent
 
@@ -336,7 +336,7 @@ FocusScope {
                                 ShellText {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     text: recordControl.modelData.icon
-                                    color: recordControl.enabledState ? (recordControl.microphone ? Theme.green : Theme.red) : Theme.mutedDark
+                                    color: recordControl.enabledState ? (recordControl.microphone ? Theme.primary : Theme.red) : Theme.mutedDark
                                     font.pixelSize: 14
                                 }
 
@@ -434,7 +434,7 @@ FocusScope {
                         width: root.recordingMode || root.mode === "full" ? parent.width : (root.mode === "window" ? 126 : 111)
                         height: root.recordingMode || root.mode === "full" ? parent.height : (root.mode === "window" ? 48 : 38)
                         radius: root.mode === "window" && !root.recordingMode ? 4 : 1
-                        color: root.recordingMode ? Qt.rgba(0.90, 0.49, 0.50, 0.08) : (root.mode === "window" ? Theme.bgGreen : Qt.rgba(0.65, 0.75, 0.50, 0.08))
+                        color: root.recordingMode ? Qt.rgba(0.90, 0.49, 0.50, 0.08) : (root.mode === "window" ? Theme.primaryContainer : Qt.rgba(0.65, 0.75, 0.50, 0.08))
                         border.width: 1
                         border.color: root.accent
 

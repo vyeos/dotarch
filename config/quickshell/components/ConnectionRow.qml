@@ -24,9 +24,9 @@ FocusScope {
     Rectangle {
         anchors.fill: parent
         radius: Theme.radiusSmall
-        color: pointer.containsMouse || root.activeFocus ? Theme.bg1 : Theme.bg0
+        color: pointer.containsMouse || root.activeFocus ? Theme.primaryContainer : Theme.bg0
         border.width: root.active ? 1 : 0
-        border.color: Theme.green
+        border.color: Theme.primary
 
         Behavior on color {
             ColorAnimation {
@@ -44,7 +44,7 @@ FocusScope {
         width: 27
         height: 27
         radius: 9
-        color: root.active ? Theme.green : Theme.bg2
+        color: root.active ? Theme.primary : Theme.bg2
 
         ShellText {
             anchors.centerIn: parent
@@ -89,7 +89,7 @@ FocusScope {
         anchors.rightMargin: 10
         anchors.verticalCenter: parent.verticalCenter
         text: root.busy ? "Working…" : root.actionText
-        color: root.active ? Theme.green : Theme.aqua
+        color: root.active ? Theme.primary : Theme.aqua
         font.pixelSize: 8
         font.weight: Font.Bold
     }

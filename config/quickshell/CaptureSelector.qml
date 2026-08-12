@@ -89,7 +89,7 @@ PanelWindow {
                 radius: modelData.rounded ? Theme.radius : 0
                 color: pointer.containsMouse ? "#26a7c080" : "transparent"
                 border.width: pointer.containsMouse ? 3 : 1
-                border.color: pointer.containsMouse ? Theme.green : Theme.mutedDark
+                border.color: pointer.containsMouse ? Theme.primary : Theme.mutedDark
 
                 Behavior on color {
                     ColorAnimation {
@@ -126,7 +126,7 @@ PanelWindow {
             radius: 2
             color: "#26a7c080"
             border.width: 2
-            border.color: Theme.green
+            border.color: Theme.primary
         }
 
         Rectangle {
@@ -142,7 +142,7 @@ PanelWindow {
             radius: Theme.radiusSmall
             color: Theme.bgDim
             border.width: 1
-            border.color: Theme.green
+            border.color: Theme.primary
 
             ShellText {
                 id: dimensionsText

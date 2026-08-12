@@ -91,7 +91,7 @@ FocusScope {
             radius: Theme.radiusSmall
             color: Theme.bg0
             border.width: searchInput.activeFocus ? 2 : 1
-            border.color: searchInput.activeFocus ? Theme.green : Theme.bg2
+            border.color: searchInput.activeFocus ? Theme.primary : Theme.bg2
 
             ShellText {
                 anchors.left: parent.left
@@ -164,9 +164,9 @@ FocusScope {
                 width: clipboardList.width
                 height: 44
                 radius: Theme.radiusSmall
-                color: index === root.selectedIndex ? Theme.bgGreen : Theme.bg0
+                color: index === root.selectedIndex ? Theme.primaryContainer : Theme.bg0
                 border.width: index === root.selectedIndex ? 1 : 0
-                border.color: Theme.blue
+                border.color: Theme.primary
 
                 ShellText {
                     anchors.left: parent.left
@@ -220,7 +220,7 @@ FocusScope {
                 anchors.leftMargin: 11
                 anchors.topMargin: 9
                 text: "Full content"
-                color: Theme.green
+                color: Theme.primary
                 font.pixelSize: 9
                 font.weight: Font.Bold
             }
