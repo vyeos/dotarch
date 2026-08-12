@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Everforest Shells — Five Top-Bar Design Systems</title>
+  <style>
+    :root {
+      --bg-dim: #232a2e;
+      --bg-0: #2d353b;
+      --bg-1: #343f44;
+      --bg-2: #3d484d;
+      --bg-3: #475258;
+      --bg-4: #4f585e;
+      --fg: #d3c6aa;
+      --muted: #9da9a0;
+      --muted-2: #7a8478;
+      --green: #a7c080;
+      --aqua: #83c092;
+      --blue: #7fbbb3;
+      --yellow: #dbbc7f;
+      --orange: #e69875;
+      --red: #e67e80;
+      --purple: #d699b6;
+      --shadow: 0 24px 70px rgba(12, 16, 18, .52), 0 2px 8px rgba(12, 16, 18, .35);
+      --line: rgba(211, 198, 170, .10);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--fg);
+      background:
+        radial-gradient(circle at 12% 3%, rgba(131, 192, 146, .10), transparent 27rem),
+        radial-gradient(circle at 92% 18%, rgba(127, 187, 179, .08), transparent 30rem),
+        var(--bg-dim);
+      font: 14px/1.45 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+    }
+
+    button, input, select { font: inherit; }
+    button { color: inherit; }
+    svg { display: block; }
+
+    .page { width: min(1460px, calc(100% - 40px)); margin: 0 auto; padding: 54px 0 90px; }
+    .eyebrow { color: var(--green); text-transform: uppercase; letter-spacing: .16em; font: 700 11px/1.2 ui-monospace, monospace; }
+    h1 { max-width: 840px; margin: 13px 0 15px; font-size: clamp(38px, 6vw, 74px); line-height: .98; letter-spacing: -.055em; font-weight: 720; }
+    h1 span { color: var(--green); }
+    .lede { max-width: 700px; color: var(--muted); font-size: 17px; }
+    .key { display: inline-flex; align-items: center; min-height: 25px; padding: 2px 8px; border: 1px solid var(--bg-3); border-bottom-color: var(--bg-4); border-radius: 7px; color: var(--fg); background: var(--bg-1); box-shadow: inset 0 -1px 0 rgba(0,0,0,.25); font: 700 11px/1 ui-monospace, monospace; }
+
+    .toc { display: flex; gap: 8px; flex-wrap: wrap; margin: 28px 0 56px; }
+    .toc a { padding: 9px 13px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); text-decoration: none; background: rgba(45,53,59,.7); }
+    .toc a:hover { color: var(--fg); border-color: var(--green); }
+
+    .section { margin-top: 70px; }
+    .section-head { display: flex; justify-content: space-between; gap: 24px; align-items: end; margin-bottom: 22px; }
+    .section h2 { margin: 6px 0 0; font-size: 27px; letter-spacing: -.03em; }
+    .section-note { max-width: 560px; color: var(--muted); text-align: right; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+
+    .study-card { position: relative; overflow: hidden; min-height: 280px; padding: 18px; border: 1px solid var(--line); border-radius: 26px; background: rgba(45, 53, 59, .72); box-shadow: 0 8px 25px rgba(18,23,25,.18); }
+    .study-card::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(140deg, rgba(255,255,255,.025), transparent 38%); }
+    .card-label { position: relative; display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+    .card-label strong { letter-spacing: -.01em; }
+    .badge { padding: 4px 8px; border-radius: 99px; background: var(--bg-2); color: var(--muted); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+    .badge.recommended { color: var(--bg-dim); background: var(--green); }
+
+    .desktop { position: relative; height: 230px; overflow: hidden; border-radius: 17px; background: radial-gradient(circle at 50% 120%, #4d6657 0, #354a42 34%, #263238 72%); border: 1px solid rgba(211,198,170,.08); }
+    .desktop::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .19; background-image: linear-gradient(120deg, transparent 0 49%, rgba(211,198,170,.06) 50%, transparent 51%); background-size: 42px 42px; }
+    .notch { position: absolute; z-index: 2; top: 0; left: 50%; transform: translateX(-50%); display: flex; align-items: center; justify-content: center; gap: 9px; color: var(--fg); background: rgba(35,42,46,.97); border: 1px solid rgba(211,198,170,.14); border-top: 0; box-shadow: var(--shadow); }
+    .notch.compact { width: 250px; height: 41px; border-radius: 0 0 18px 18px; font-weight: 680; }
+    .notch.pill { top: 9px; width: 268px; height: 44px; border-radius: 99px; border-top: 1px solid rgba(211,198,170,.10); }
+    .notch.split { width: 310px; height: 46px; border-radius: 0 0 16px 16px; justify-content: space-between; padding: 0 16px; }
+    .notch.compact::before, .notch.compact::after,
+    .notch.split::before, .notch.split::after,
+    .live-notch::before, .live-notch::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      width: 12px;
+      height: 12px;
+      pointer-events: none;
+    }
+    .notch.compact::before, .notch.split::before, .live-notch::before {
+      left: -12px;
+      background: radial-gradient(circle at 0 100%, transparent 0 10px, rgba(211,198,170,.10) 10.25px 10.8px, rgba(35,42,46,.97) 11.5px);
+    }
+    .notch.compact::after, .notch.split::after, .live-notch::after {
+      right: -12px;
+      background: radial-gradient(circle at 100% 100%, transparent 0 10px, rgba(211,198,170,.10) 10.25px 10.8px, rgba(35,42,46,.97) 11.5px);
+    }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px rgba(167,192,128,.10); }
+    .battery { display: inline-flex; gap: 5px; align-items: center; color: var(--green); font-size: 12px; }
+    .battery-shape { width: 18px; height: 9px; padding: 2px; border: 1px solid currentColor; border-radius: 3px; position: relative; }
+    .battery-shape::after { content: ""; position: absolute; right: -3px; top: 2px; width: 2px; height: 4px; border-radius: 0 2px 2px 0; background: currentColor; }
+    .battery-fill { display:block; width: 72%; height:100%; border-radius:1px; background: currentColor; }
+    .hint { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); color: rgba(211,198,170,.6); font-size: 11px; white-space: nowrap; }
+
+    .interactive-shell { position: relative; min-height: 800px; overflow: hidden; border: 1px solid var(--line); border-radius: 28px; background: radial-gradient(circle at 23% 78%, #4b5f51, transparent 25%), radial-gradient(circle at 76% 90%, #3f5961, transparent 29%), linear-gradient(160deg, #263339, #1f282c 72%); box-shadow: var(--shadow); }
+    .interactive-shell::before { content:""; position:absolute; inset:0; background: linear-gradient(rgba(0,0,0,.06), rgba(0,0,0,.32)); }
+    .workspace-label { position: absolute; left: 28px; top: 23px; z-index: 1; color: rgba(211,198,170,.46); font: 650 11px/1 ui-monospace, monospace; letter-spacing: .1em; }
+    .shell-nav { position: absolute; top: 15px; right: 18px; z-index: 5; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; max-width: 480px; }
+    .shell-nav button { cursor: pointer; padding: 7px 10px; color: var(--muted); border: 1px solid rgba(211,198,170,.10); background: rgba(35,42,46,.78); border-radius: 9px; font-size: 11px; }
+    .shell-nav button.active, .shell-nav button:hover { color: var(--bg-dim); background: var(--green); border-color: var(--green); }
+    .design-switcher { display:flex; align-items:center; gap:6px; margin-bottom:12px; padding:7px; overflow-x:auto; border:1px solid var(--line); border-radius:16px; background:rgba(45,53,59,.72); }
+    .design-switcher > span { margin:0 6px; color:var(--muted); white-space:nowrap; font:700 10px/1 ui-monospace,monospace; letter-spacing:.1em; text-transform:uppercase; }
+    .design-switcher button { min-width:max-content; padding:8px 12px; border:1px solid transparent; border-radius:10px; color:var(--muted); background:transparent; cursor:pointer; }
+    .design-switcher button:hover { color:var(--fg); background:var(--bg-1); }
+    .design-switcher button.active { color:var(--bg-dim); background:var(--green); font-weight:800; }
+    .design-caption { display:flex; justify-content:space-between; gap:24px; margin:-2px 2px 14px; color:var(--muted); font-size:12px; }
+    .design-caption strong { color:var(--fg); }
+    .design-caption span:last-child { text-align:right; }
+    .edge-cluster { position:absolute; z-index:4; top:13px; display:none; align-items:center; gap:8px; height:34px; color:var(--muted); font-size:11px; }
+    .edge-cluster.left { left:18px; }
+    .edge-cluster.right { right:18px; }
+    .edge-chip { display:inline-flex; align-items:center; gap:6px; padding:7px 10px; border:1px solid var(--line); border-radius:10px; background:rgba(35,42,46,.86); }
+    .live-notch { position: absolute; z-index: 2; top: 0; left: 0; right: 0; margin-inline: auto; display: flex; align-items: stretch; flex-direction: column; width: min(250px, calc(100% - 44px)); min-height: 48px; height: auto; color: var(--fg); background: rgba(35,42,46,.97); border: 1px solid rgba(211,198,170,.14); border-top: 0; border-radius: 0 0 25px 25px; box-shadow: var(--shadow); }
+    .live-notch.open { width: min(590px, calc(100% - 44px)); }
+    .live-notch.wide { width: min(590px, calc(100% - 44px)); }
+    .notch-bar { min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 0 18px; }
+    .live-notch.open .notch-bar { display: none; }
+    .interactive-shell.notifications-open .live-notch { visibility: hidden; }
+    .notch-bar .divider { width: 1px; height: 13px; background: var(--bg-3); }
+    .notch-content { display: none; padding: 16px 18px 18px; animation: appear .24s ease both; }
+    .live-notch.open .notch-content { display: block; }
+    @keyframes appear { from { opacity: 0; transform: translateY(-8px); } }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .icon-button { display: grid; place-items: center; width: 32px; height: 32px; border: 0; border-radius: 10px; background: var(--bg-1); cursor: pointer; }
+    .icon-button:hover { background: var(--bg-2); }
+
+    .quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .quick-tile { min-height: 62px; padding: 10px 12px; border: 1px solid transparent; border-radius: 15px; background: var(--bg-1); display: flex; align-items: center; gap: 10px; cursor: pointer; text-align: left; }
+    .quick-tile.on { background: rgba(167,192,128,.16); border-color: rgba(167,192,128,.20); }
+    .quick-tile .tile-icon { display:grid; place-items:center; width:34px; height:34px; flex:none; border-radius:11px; background:var(--bg-2); color:var(--muted); font-size:17px; }
+    .quick-tile.on .tile-icon { color: var(--bg-dim); background: var(--green); }
+    .quick-tile strong, .quick-tile span { display:block; }
+    .quick-tile span { margin-top:2px; color:var(--muted); font-size:11px; }
+    .slider-row { display:grid; grid-template-columns:34px 1fr 35px; gap:10px; align-items:center; margin-top:10px; padding:8px 10px; border-radius:14px; background:var(--bg-1); }
+    .slider-row output { color:var(--muted); font-size:11px; text-align:right; }
+    input[type="range"] { appearance:none; width:100%; height:4px; border-radius:99px; background:linear-gradient(90deg,var(--green) 0 68%,var(--bg-3) 68%); }
+    input[type="range"]::-webkit-slider-thumb { appearance:none; width:15px; height:15px; border-radius:50%; background:var(--fg); box-shadow:0 1px 5px rgba(0,0,0,.5); }
+    .now-playing { display:grid; grid-template-columns:46px 1fr auto; gap:11px; align-items:center; margin-top:10px; padding:10px; border-radius:15px; background:linear-gradient(100deg,rgba(214,153,182,.15),var(--bg-1) 42%); }
+    .cover { width:46px; height:46px; border-radius:10px; display:grid; place-items:center; color:var(--bg-dim); background:linear-gradient(145deg,var(--purple),var(--orange)); font-size:20px; }
+    .track strong,.track span { display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .track span { color:var(--muted); font-size:11px; }
+    .controls { display:flex; gap:4px; }
+    .tray { display:flex; align-items:center; gap:8px; margin-top:10px; color:var(--muted); }
+    .tray-label { margin-right:auto; font-size:11px; }
+    .tray-item { position:relative; display:grid; place-items:center; width:28px; height:28px; border-radius:8px; background:var(--bg-1); }
+    .tray-item.attention::after { content:""; position:absolute; right:4px; top:4px; width:5px; height:5px; border-radius:50%; background:var(--orange); }
+
+    .search-box { display:flex; align-items:center; gap:10px; padding:12px 14px; border:1px solid var(--bg-3); border-radius:14px; background:var(--bg-1); }
+    .search-box input { width:100%; color:var(--fg); border:0; outline:0; background:transparent; font-size:16px; }
+    .results { display:grid; gap:6px; margin-top:10px; }
+    .result { display:grid; grid-template-columns:36px 1fr auto; gap:10px; align-items:center; padding:8px 10px; border-radius:12px; }
+    .result.selected { background:var(--bg-2); }
+    .app-icon { display:grid; place-items:center; width:36px; height:36px; border-radius:10px; color:var(--bg-dim); background:var(--blue); font-weight:900; }
+    .result:nth-child(2) .app-icon { background:var(--purple); }
+    .result:nth-child(3) .app-icon { background:var(--orange); }
+    .result span,.result small { display:block; }
+    .result small { color:var(--muted); }
+    .calc-answer { margin-top:10px; padding:14px; border-radius:15px; background:rgba(167,192,128,.12); border:1px solid rgba(167,192,128,.24); }
+    .calc-answer .expression { color:var(--muted); }
+    .calc-answer .answer { display:flex; justify-content:space-between; align-items:end; font-size:30px; font-weight:750; color:var(--green); }
+    .copy-toast { opacity:0; transform:translateY(4px); color:var(--green); font-size:11px; transition:.2s; }
+    .copy-toast.show { opacity:1; transform:none; }
+
+    .clip-list,.todo-list,.notification-list { display:grid; gap:7px; }
+    .clip-item,.todo-item,.notification { padding:11px 12px; border-radius:13px; background:var(--bg-1); }
+    .clip-item { display:grid; grid-template-columns:1fr auto; gap:12px; }
+    .clip-item:first-child { border:1px solid rgba(127,187,179,.25); background:rgba(127,187,179,.10); }
+    .clip-item p { margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .clip-item small,.todo-item small { color:var(--muted); }
+    .clip-meta { display:flex; gap:7px; align-items:center; }
+    .todo-entry { display:flex; gap:8px; margin-bottom:10px; }
+    .todo-entry input { flex:1; min-width:0; padding:10px 12px; color:var(--fg); border:1px solid var(--bg-3); border-radius:12px; outline:0; background:var(--bg-1); }
+    .add-button { border:0; border-radius:11px; padding:0 14px; color:var(--bg-dim); background:var(--green); font-weight:800; cursor:pointer; }
+    .todo-item { display:flex; align-items:center; gap:10px; }
+    .check { width:18px; height:18px; border:2px solid var(--muted-2); border-radius:6px; flex:none; }
+    .todo-item.done { opacity:.55; }
+    .todo-item.done .check { border-color:var(--green); background:var(--green); box-shadow:inset 0 0 0 4px var(--bg-1); }
+    .todo-item.done span { text-decoration:line-through; }
+
+    .segmented { display:flex; gap:4px; padding:4px; border-radius:12px; background:var(--bg-1); }
+    .segmented button { flex:1; padding:8px; border:0; border-radius:9px; background:transparent; color:var(--muted); cursor:pointer; }
+    .segmented button.active { color:var(--bg-dim); background:var(--green); font-weight:750; }
+    .capture-options { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:10px; }
+    .capture-option { padding:14px 8px; border:1px solid transparent; border-radius:13px; background:var(--bg-1); text-align:center; cursor:pointer; }
+    .capture-option.active { border-color:var(--blue); color:var(--blue); background:rgba(127,187,179,.10); }
+    .capture-option b { display:block; margin-bottom:4px; font-size:19px; }
+    .mic-row { display:flex; gap:8px; align-items:center; margin-top:10px; padding:10px; border-radius:12px; background:var(--bg-1); }
+    .mic-row select { flex:1; min-width:0; color:var(--fg); border:0; outline:0; background:var(--bg-2); border-radius:8px; padding:7px; }
+    .capture-button { width:100%; margin-top:10px; padding:11px; border:0; border-radius:12px; color:var(--bg-dim); background:var(--red); font-weight:800; cursor:pointer; }
+
+    .power-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+    .power-action { padding:14px 4px 10px; border:1px solid transparent; border-radius:14px; background:var(--bg-1); text-align:center; cursor:pointer; }
+    .power-action b { display:grid; place-items:center; width:32px; height:32px; margin:0 auto 7px; border-radius:50%; background:var(--bg-2); font-size:16px; }
+    .power-action span { font-size:10px; }
+    .power-action:hover { border-color:var(--yellow); }
+    .power-action.danger:hover { border-color:var(--red); color:var(--red); }
+
+    .notification-drawer { position:absolute; z-index:3; top:72px; right:16px; width:310px; padding:14px; border:1px solid var(--line); border-radius:20px 0 0 20px; background:rgba(35,42,46,.97); box-shadow:var(--shadow); transform:translateX(calc(100% + 18px)); opacity:0; transition:.28s ease; }
+    .notification-drawer.open { transform:none; opacity:1; }
+    .notification-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:11px; }
+    .notification { display:grid; grid-template-columns:34px 1fr; gap:9px; }
+    .notification p { margin:2px 0 0; color:var(--muted); font-size:11px; }
+    .notification .app-icon { width:34px; height:34px; font-size:11px; }
+    .toast-demo { position:absolute; z-index:2; top:78px; right:16px; width:286px; padding:12px; border:1px solid var(--line); border-radius:16px; background:rgba(45,53,59,.97); box-shadow:var(--shadow); animation:toast 5s ease infinite; }
+    @keyframes toast { 0%,12%{opacity:0;transform:translateX(20px)} 20%,80%{opacity:1;transform:none} 90%,100%{opacity:0;transform:translateX(20px)} }
+    .toast-demo strong,.toast-demo span { display:block; }
+    .toast-demo span { margin-top:2px; color:var(--muted); font-size:11px; }
+
+    /* 01 — Notch: display-edge integration and one continuous expanding shell. */
+    .interactive-shell[data-design="notch"] .live-notch { transition:width .28s ease,border-radius .28s ease; }
+
+    /* 02 — Canopy: a calm, full-width bar with an attached utility sheet. */
+    .interactive-shell[data-design="canopy"] { --green:#83c092; --accent:#83c092; }
+    .interactive-shell[data-design="canopy"] .workspace-label { display:none; }
+    .interactive-shell[data-design="canopy"] .edge-cluster { display:flex; }
+    .interactive-shell[data-design="canopy"] .shell-nav { top:62px; right:18px; }
+    .interactive-shell[data-design="canopy"] .live-notch { top:8px; left:12px; right:12px; width:auto; min-height:42px; border:1px solid rgba(131,192,146,.18); border-radius:12px; background:rgba(45,53,59,.94); box-shadow:0 12px 36px rgba(12,16,18,.34); }
+    .interactive-shell[data-design="canopy"] .live-notch::before,
+    .interactive-shell[data-design="canopy"] .live-notch::after { display:none; }
+    .interactive-shell[data-design="canopy"] .notch-bar { min-height:42px; }
+    .interactive-shell[data-design="canopy"] .live-notch.open { top:106px; left:auto; right:18px; width:min(540px,calc(100% - 36px)); border-radius:18px; }
+    .interactive-shell[data-design="canopy"] .notch-content { border-top:3px solid var(--aqua); }
+    .interactive-shell[data-design="canopy"] .notification-drawer { top:106px; border-radius:18px; border-top:3px solid var(--purple); }
+    .interactive-shell[data-design="canopy"] .notification-drawer.open { opacity:1; }
+    .interactive-shell[data-design="canopy"] .toast-demo { top:62px; }
+
+    /* 03 — Branch: three independent islands and crisp centered command cards. */
+    .interactive-shell[data-design="branch"] { --green:#7fbbb3; --accent:#7fbbb3; }
+    .interactive-shell[data-design="branch"] .workspace-label { top:auto; bottom:22px; }
+    .interactive-shell[data-design="branch"] .edge-cluster { display:flex; top:12px; }
+    .interactive-shell[data-design="branch"] .edge-cluster .edge-chip { border-radius:999px; background:rgba(35,42,46,.93); box-shadow:0 10px 30px rgba(12,16,18,.35); }
+    .interactive-shell[data-design="branch"] .shell-nav { top:68px; left:50%; right:auto; max-width:none; transform:translateX(-50%); flex-wrap:nowrap; }
+    .interactive-shell[data-design="branch"] .live-notch { top:10px; min-height:40px; width:220px; border:1px solid rgba(127,187,179,.18); border-radius:999px; background:rgba(35,42,46,.94); }
+    .interactive-shell[data-design="branch"] .live-notch::before,
+    .interactive-shell[data-design="branch"] .live-notch::after { display:none; }
+    .interactive-shell[data-design="branch"] .notch-bar { min-height:40px; padding:0 14px; gap:9px; }
+    .interactive-shell[data-design="branch"] .live-notch.open { top:118px; width:min(560px,calc(100% - 44px)); border-radius:20px; border-top:4px solid var(--blue); }
+    .interactive-shell[data-design="branch"] .live-notch.open .notch-content { padding:18px; }
+    .interactive-shell[data-design="branch"] .notification-drawer { top:118px; right:50%; transform:translate(50%,-12px); border-radius:20px; border-top:4px solid var(--purple); }
+    .interactive-shell[data-design="branch"] .notification-drawer.open { transform:translateX(50%); opacity:1; }
+    .interactive-shell[data-design="branch"] .toast-demo { top:auto; right:18px; bottom:18px; }
+
+    /* 04 — Grove: an organic floating rail and compact left-aligned leaves. */
+    .interactive-shell[data-design="grove"] { --green:#a7c080; --accent:#a7c080; }
+    .interactive-shell[data-design="grove"] .workspace-label { left:auto; right:24px; top:auto; bottom:22px; }
+    .interactive-shell[data-design="grove"] .edge-cluster.left { display:flex; left:22px; top:16px; }
+    .interactive-shell[data-design="grove"] .edge-cluster.right { display:none; }
+    .interactive-shell[data-design="grove"] .shell-nav { top:68px; left:20px; right:auto; max-width:385px; justify-content:flex-start; }
+    .interactive-shell[data-design="grove"] .live-notch { top:14px; left:214px; right:auto; margin:0; width:230px; min-height:44px; border:1px solid rgba(167,192,128,.22); border-radius:14px 24px 24px 14px; background:linear-gradient(110deg,rgba(52,63,68,.97),rgba(35,42,46,.97)); }
+    .interactive-shell[data-design="grove"] .live-notch::before,
+    .interactive-shell[data-design="grove"] .live-notch::after { display:none; }
+    .interactive-shell[data-design="grove"] .notch-bar { min-height:44px; }
+    .interactive-shell[data-design="grove"] .live-notch.open { top:154px; left:20px; width:min(520px,calc(100% - 40px)); border-radius:10px 26px 26px 26px; border-left:4px solid var(--green); }
+    .interactive-shell[data-design="grove"] .quick-grid { grid-template-columns:1fr 1fr 1fr; }
+    .interactive-shell[data-design="grove"] .quick-tile { align-items:flex-start; flex-direction:column; }
+    .interactive-shell[data-design="grove"] .notification-drawer { top:154px; left:20px; right:auto; border-radius:10px 24px 24px 24px; border-left:4px solid var(--purple); transform:translateX(-110%); }
+    .interactive-shell[data-design="grove"] .notification-drawer.open { transform:none; opacity:1; }
+    .interactive-shell[data-design="grove"] .toast-demo { top:18px; right:18px; }
+
+    /* 05 — Hearth: a framed ribbon with warm, right-anchored cards. */
+    .interactive-shell[data-design="hearth"] { --green:#dbbc7f; --accent:#dbbc7f; }
+    .interactive-shell[data-design="hearth"] .workspace-label { top:24px; left:24px; color:var(--yellow); }
+    .interactive-shell[data-design="hearth"] .edge-cluster.right { display:flex; top:16px; }
+    .interactive-shell[data-design="hearth"] .shell-nav { top:72px; right:22px; max-width:410px; }
+    .interactive-shell[data-design="hearth"] .live-notch { top:14px; left:auto; right:210px; margin:0; width:260px; min-height:44px; border:1px solid rgba(219,188,127,.20); border-radius:8px; background:rgba(52,63,68,.95); box-shadow:6px 6px 0 rgba(35,42,46,.75),var(--shadow); }
+    .interactive-shell[data-design="hearth"] .live-notch::before,
+    .interactive-shell[data-design="hearth"] .live-notch::after { display:none; }
+    .interactive-shell[data-design="hearth"] .notch-bar { min-height:44px; }
+    .interactive-shell[data-design="hearth"] .live-notch.open { top:154px; right:22px; width:min(570px,calc(100% - 44px)); border-radius:8px; border-top:4px solid var(--yellow); }
+    .interactive-shell[data-design="hearth"] .notch-content,
+    .interactive-shell[data-design="hearth"] .notification-drawer { background:linear-gradient(145deg,rgba(52,63,68,.98),rgba(45,53,59,.98)); }
+    .interactive-shell[data-design="hearth"] .quick-tile,
+    .interactive-shell[data-design="hearth"] .slider-row,
+    .interactive-shell[data-design="hearth"] .clip-item,
+    .interactive-shell[data-design="hearth"] .todo-item { border-radius:8px; }
+    .interactive-shell[data-design="hearth"] .notification-drawer { top:154px; right:22px; border-radius:8px; border-top:4px solid var(--purple); }
+    .interactive-shell[data-design="hearth"] .notification-drawer.open { opacity:1; }
+    .interactive-shell[data-design="hearth"] .toast-demo { top:auto; bottom:20px; border-radius:8px; border-left:3px solid var(--orange); }
+
+    .layout-card { padding:18px; min-height:340px; }
+    .mini-panel { width:100%; padding:13px; border-radius:18px; background:var(--bg-dim); box-shadow:var(--shadow); }
+    .mini-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .mini-row { display:flex; gap:7px; margin-top:7px; }
+    .mini-block { height:42px; flex:1; border-radius:10px; background:var(--bg-1); }
+    .mini-block.active { background:rgba(167,192,128,.20); border:1px solid rgba(167,192,128,.25); }
+    .mini-line { height:9px; margin-top:7px; border-radius:9px; background:var(--bg-2); }
+    .mini-line.short { width:62%; }
+    .layout-caption { margin-top:15px; color:var(--muted); font-size:12px; }
+
+    .spec-table { width:100%; border-collapse:separate; border-spacing:0; overflow:hidden; border:1px solid var(--line); border-radius:20px; background:rgba(45,53,59,.65); }
+    .spec-table th,.spec-table td { padding:13px 15px; border-bottom:1px solid var(--line); text-align:left; }
+    .spec-table th { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.08em; }
+    .spec-table tr:last-child td { border-bottom:0; }
+    .color-chip { display:inline-block; width:11px; height:11px; margin-right:7px; border-radius:3px; vertical-align:-1px; }
+
+    .footer { margin-top:54px; padding-top:24px; border-top:1px solid var(--line); display:flex; justify-content:space-between; gap:16px; color:var(--muted); }
+
+    @media (max-width: 980px) {
+      .grid-3 { grid-template-columns:1fr; }
+      .grid-2 { grid-template-columns:1fr; }
+      .section-head { align-items:start; flex-direction:column; }
+      .section-note { text-align:left; }
+      .shell-nav { top:63px; left:16px; right:16px; max-width:none; justify-content:center; }
+      .interactive-shell[data-design] .shell-nav { left:16px; right:16px; transform:none; max-width:none; justify-content:center; }
+      .interactive-shell[data-design] .live-notch.open { left:24px; right:24px; width:auto; margin:0; }
+      .live-notch.open { width:min(590px,calc(100% - 48px)); }
+      .interactive-shell { min-height:880px; }
+      .toast-demo { top:130px; }
+      .notification-drawer { top:130px; }
+    }
+    @media (max-width: 620px) {
+      .page { width:min(100% - 20px,1460px); padding-top:32px; }
+      .live-notch.open, .live-notch.wide { width:calc(100% - 48px); }
+      .quick-grid { grid-template-columns:1fr; }
+      .power-grid { grid-template-columns:repeat(3,1fr); }
+      .notch-content { padding-left:10px; padding-right:10px; }
+      .shell-nav button { padding:6px 7px; }
+      .interactive-shell { min-height:990px; }
+      .notification-drawer { width:calc(100% - 28px); }
+      .spec-table { display:block; overflow-x:auto; white-space:nowrap; }
+      .footer { flex-direction:column; }
+      .design-caption { flex-direction:column; gap:3px; }
+      .design-caption span:last-child { text-align:left; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <div class="eyebrow">Quickshell interface study · Everforest</div>
+      <h1>Five top bars, one <span>forest language.</span></h1>
+      <p class="lede">A complete Everforest design board for five coherent desktop shells: one notch and four distinct alternatives, each carrying its own geometry through every utility window.</p>
+      <nav class="toc" aria-label="Sections">
+        <a href="#notches">Notch options</a><a href="#prototype">Interactive prototype</a><a href="#layouts">Layout options</a><a href="#spec">Design spec</a>
+      </nav>
+    </header>
+
+    <section class="section" id="notches">
+      <div class="section-head">
+        <div><div class="eyebrow">01 · Collapsed state</div><h2>Three notch silhouettes</h2></div>
+        <p class="section-note">Battery stays visible beside time. Percentage appears contextually—when charging, under 20%, or by preference.</p>
+      </div>
+      <div class="grid-3">
+        <article class="study-card"><div class="card-label"><strong>A · Integrated edge</strong><span class="badge recommended">Recommended</span></div><div class="desktop"><div class="notch compact"><span class="battery"><i class="battery-shape"><i class="battery-fill"></i></i>72%</span><span>06:20</span><span style="color:var(--muted)">Wed 12 Aug</span></div><span class="hint">Feels physically attached to the display edge</span></div></article>
+        <article class="study-card"><div class="card-label"><strong>B · Floating capsule</strong><span class="badge">Softest</span></div><div class="desktop"><div class="notch pill"><span class="battery"><i class="battery-shape"><i class="battery-fill"></i></i></span><span>06:20</span><span style="color:var(--muted)">Wed 12 Aug</span><i class="dot"></i></div><span class="hint">Airy, modern, and visually independent</span></div></article>
+        <article class="study-card"><div class="card-label"><strong>C · Split status</strong><span class="badge">Informative</span></div><div class="desktop"><div class="notch split"><span class="battery"><i class="battery-shape"><i class="battery-fill"></i></i>72%</span><span><b>06:20</b>&nbsp; <span style="color:var(--muted)">Wed 12 Aug</span></span><span style="color:var(--blue)">◉</span></div><span class="hint">Clear status zones and room for attention dots</span></div></article>
+      </div>
+    </section>
+
+    <section class="section" id="prototype">
+      <div class="section-head">
+        <div><div class="eyebrow">02 · Working composition</div><h2>Explore every shell state</h2></div>
+        <p class="section-note">Use the controls inside the mock desktop. The calculator evaluates basic arithmetic; pressing Enter copies its answer.</p>
+      </div>
+      <div class="design-switcher" role="toolbar" aria-label="Shell design variation">
+        <span>Variation</span>
+        <button class="active" data-design-choice="notch">01 · Notch</button>
+        <button data-design-choice="canopy">02 · Canopy</button>
+        <button data-design-choice="branch">03 · Branch</button>
+        <button data-design-choice="grove">04 · Grove</button>
+        <button data-design-choice="hearth">05 · Hearth</button>
+      </div>
+      <div class="design-caption"><span><strong id="designName">Notch</strong> · Integrated edge</span><span id="designDescription">A centered display cutout that expands in place into every utility.</span></div>
+      <div class="interactive-shell" id="shell" data-design="notch">
+        <span class="workspace-label">WORKSPACE 02</span>
+        <div class="edge-cluster left"><span class="edge-chip">● 02</span><span class="edge-chip">⌘ dev</span></div>
+        <div class="edge-cluster right"><span class="edge-chip">⌁ Wi-Fi</span><span class="edge-chip">72% ◫</span></div>
+        <div class="shell-nav" role="toolbar" aria-label="Shell states">
+          <button class="active" data-panel="clock">Clock</button><button data-panel="control">Control</button><button data-panel="launcher">Launcher</button><button data-panel="clipboard">Clipboard</button><button data-panel="todo">Todo</button><button data-panel="capture">Capture</button><button data-panel="power">Power</button><button id="notificationToggle">Notifications</button>
+        </div>
+        <div class="live-notch" id="liveNotch">
+          <div class="notch-bar"><span class="battery"><i class="battery-shape"><i class="battery-fill"></i></i>72%</span><span class="divider"></span><strong>06:20</strong><span style="color:var(--muted)">Wed 12 Aug</span><i class="dot" title="Unread notification"></i></div>
+          <div class="notch-content">
+            <section class="panel" id="control">
+              <div class="quick-grid">
+                <button class="quick-tile on toggle"><span class="tile-icon">⌁</span><span><strong>Wi-Fi</strong><span>Everforest 5G</span></span></button>
+                <button class="quick-tile on toggle"><span class="tile-icon">ᛒ</span><span><strong>Bluetooth</strong><span>2 devices</span></span></button>
+                <button class="quick-tile on toggle"><span class="tile-icon">☾</span><span><strong>Night Light</strong><span>Until sunrise</span></span></button>
+                <button class="quick-tile" id="clockButton"><span class="tile-icon">◷</span><span><strong>Clocks</strong><span>Open floating</span></span></button>
+              </div>
+              <label class="slider-row"><span>◖</span><input type="range" min="0" max="100" value="68" aria-label="Volume"><output>68%</output></label>
+              <label class="slider-row"><span>☀</span><input type="range" min="0" max="100" value="74" aria-label="Brightness"><output>74%</output></label>
+              <div class="now-playing"><div class="cover">♫</div><div class="track"><strong>White Gloves</strong><span>Khruangbin · The Universe Smiles Upon You</span></div><div class="controls"><button class="icon-button">‹</button><button class="icon-button">▶</button><button class="icon-button">›</button></div></div>
+              <div class="tray"><span class="tray-label">Background apps</span><span class="tray-item attention" title="Steam">S</span><span class="tray-item" title="Syncthing">↻</span><span class="tray-item" title="VPN">◇</span><span class="tray-item" title="Updates">⇧</span></div>
+            </section>
+
+            <section class="panel" id="launcher">
+              <label class="search-box"><span>⌕</span><input id="launcherInput" autocomplete="off" placeholder="Search apps or calculate…" value="128 * 3.5"><span class="key">↵</span></label>
+              <div class="calc-answer" id="calcAnswer"><div class="expression" id="calcExpression">128 × 3.5</div><div class="answer"><span id="calcValue">448</span><span class="copy-toast" id="copyToast">Copied to clipboard ✓</span></div></div>
+              <div class="results" id="appResults">
+                <div class="result selected"><span class="app-icon">F</span><span><b>Files</b><small>System</small></span><span class="key">↵</span></div>
+                <div class="result"><span class="app-icon">C</span><span><b>GNOME Clocks</b><small>Utility</small></span></div>
+                <div class="result"><span class="app-icon">T</span><span><b>Terminal</b><small>Development</small></span></div>
+              </div>
+            </section>
+
+            <section class="panel" id="clipboard">
+              <label class="search-box"><span>⌕</span><input placeholder="Search clipboard history…"></label>
+              <div class="clip-list" style="margin-top:10px">
+                <div class="clip-item"><div><p>#A7C080</p><small>Text · just now</small></div><span class="key">↵ paste</span></div>
+                <div class="clip-item"><div><p>https://everforest.vercel.app/palette</p><small>Link · 3 min</small></div><span>⌘</span></div>
+                <div class="clip-item"><div><p>quickshell -c everforest</p><small>Text · 12 min</small></div><span>⌘</span></div>
+              </div>
+            </section>
+
+            <section class="panel" id="todo">
+              <div class="todo-entry"><input id="todoInput" placeholder="Add a small thing…"><button class="add-button" id="addTodo">Add</button></div>
+              <div class="todo-list" id="todoList">
+                <div class="todo-item"><i class="check"></i><span>Finish shell keyboard navigation</span></div>
+                <div class="todo-item"><i class="check"></i><span>Choose notification animation</span></div>
+                <div class="todo-item done"><i class="check"></i><span>Pick the Everforest palette</span></div>
+              </div>
+            </section>
+
+            <section class="panel" id="capture">
+              <div class="segmented"><button class="active" data-mode="shot">Screenshot</button><button data-mode="record">Screen recording</button></div>
+              <div class="capture-options"><button class="capture-option"><b>▣</b>Full screen</button><button class="capture-option"><b>▤</b>Window</button><button class="capture-option active"><b>⌗</b>Region</button></div>
+              <div class="mic-row" id="micRow" hidden><button class="icon-button" id="micToggle">◉</button><span>Microphone</span><select aria-label="Microphone source"><option>Built-in Microphone</option><option>USB Audio Interface</option><option>Monitor of Speakers</option></select></div>
+              <button class="capture-button" id="captureButton">Take screenshot</button>
+            </section>
+
+            <section class="panel" id="power">
+              <div class="power-grid">
+                <button class="power-action"><b>⌾</b><span>Lock</span></button><button class="power-action"><b>☾</b><span>Suspend</span></button><button class="power-action"><b>↪</b><span>Log out</span></button><button class="power-action danger"><b>↻</b><span>Reboot</span></button><button class="power-action danger"><b>⏻</b><span>Shutdown</span></button>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <aside class="notification-drawer" id="notificationDrawer">
+          <div class="notification-head"><strong>Notifications</strong><span><small style="color:var(--muted)">DND</small> ◯</span></div>
+          <div class="notification-list">
+            <article class="notification"><span class="app-icon">M</span><div><strong>Messages</strong><p>Ada: The first shell mockup is ready.</p></div></article>
+            <article class="notification"><span class="app-icon" style="background:var(--orange)">S</span><div><strong>Steam</strong><p>Cloud synchronization complete.</p></div></article>
+            <article class="notification"><span class="app-icon" style="background:var(--green)">✓</span><div><strong>Capture saved</strong><p>Copied to clipboard · Open · Reveal</p></div></article>
+          </div>
+        </aside>
+        <aside class="toast-demo" id="toastDemo"><strong>Download complete</strong><span>everforest-wallpaper.png · Open file</span></aside>
+      </div>
+    </section>
+
+    <section class="section" id="layouts">
+      <div class="section-head"><div><div class="eyebrow">03 · Expansion language</div><h2>Three layout directions</h2></div><p class="section-note">The same feature set can feel compact, balanced, or expressive. The center option is the recommended baseline.</p></div>
+      <div class="grid-3">
+        <article class="study-card layout-card"><div class="card-label"><strong>A · Dense stack</strong><span class="badge">Fast</span></div><div class="mini-panel"><div class="mini-head"><b>Control Center</b><small>420 × 404</small></div><div class="mini-row"><div class="mini-block active"></div><div class="mini-block active"></div><div class="mini-block"></div></div><div class="mini-line"></div><div class="mini-line"></div><div class="mini-row"><div class="mini-block" style="height:62px"></div></div><div class="mini-row"><div class="mini-block" style="height:28px"></div><div class="mini-block" style="height:28px"></div><div class="mini-block" style="height:28px"></div></div></div><p class="layout-caption">Best for smaller displays. Three controls per row; lowest pointer travel, but labels have less breathing room.</p></article>
+        <article class="study-card layout-card"><div class="card-label"><strong>B · Balanced cards</strong><span class="badge recommended">Recommended</span></div><div class="mini-panel"><div class="mini-head"><b>Control Center</b><small>590 × 510</small></div><div class="mini-row"><div class="mini-block active"></div><div class="mini-block active"></div></div><div class="mini-row"><div class="mini-block active"></div><div class="mini-block"></div></div><div class="mini-line"></div><div class="mini-line short"></div><div class="mini-row"><div class="mini-block" style="height:66px"></div></div></div><p class="layout-caption">Clear two-column rhythm, readable device states, and a natural width for launcher and clipboard content.</p></article>
+        <article class="study-card layout-card"><div class="card-label"><strong>C · Command deck</strong><span class="badge">Expressive</span></div><div class="mini-panel" style="display:grid;grid-template-columns:1fr 1.3fr;gap:9px"><div><div class="mini-block active" style="height:67px"></div><div class="mini-block" style="height:67px;margin-top:8px"></div><div class="mini-block" style="height:67px;margin-top:8px"></div></div><div><div class="mini-block" style="height:108px"></div><div class="mini-line"></div><div class="mini-line short"></div><div class="mini-block" style="height:52px;margin-top:12px"></div></div></div><p class="layout-caption">Asymmetric and rich. Excellent on ultrawide displays, but visually heavier and less consistent across utilities.</p></article>
+      </div>
+    </section>
+
+    <section class="section" id="spec">
+      <div class="section-head"><div><div class="eyebrow">04 · Handoff</div><h2>Interaction and theme specification</h2></div><p class="section-note">Use these values as implementation tokens rather than sampling colors from the mockup.</p></div>
+      <table class="spec-table">
+        <thead><tr><th>Surface / action</th><th>Shortcut</th><th>Recommended behavior</th><th>Primary token</th></tr></thead>
+        <tbody>
+          <tr><td>Glance notch</td><td>Hover / click</td><td>Hover previews; click pins Control Center</td><td><i class="color-chip" style="background:#232a2e"></i>#232A2E</td></tr>
+          <tr><td>Application launcher + calculator</td><td><span class="key">Hyper + Space</span></td><td>Arithmetic is evaluated inline; Enter copies answer</td><td><i class="color-chip" style="background:#a7c080"></i>#A7C080</td></tr>
+          <tr><td>Clipboard manager</td><td><span class="key">Super + V</span></td><td>Search, preview, Enter to paste</td><td><i class="color-chip" style="background:#7fbbb3"></i>#7FBBB3</td></tr>
+          <tr><td>Minimal todo</td><td><span class="key">Hyper + /</span></td><td>Capture-first list, no project-management complexity</td><td><i class="color-chip" style="background:#83c092"></i>#83C092</td></tr>
+          <tr><td>Capture menu</td><td><span class="key">Super + Shift + C</span></td><td>Mode → target → microphone source</td><td><i class="color-chip" style="background:#e69875"></i>#E69875</td></tr>
+          <tr><td>Power menu</td><td><span class="key">Super + Esc</span></td><td>Confirmation only for reboot and shutdown</td><td><i class="color-chip" style="background:#e67e80"></i>#E67E80</td></tr>
+          <tr><td>Notification history</td><td><span class="key">Super + N</span></td><td>Independent right-edge drawer; transient toasts above it</td><td><i class="color-chip" style="background:#d699b6"></i>#D699B6</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="footer"><span>Everforest Dark Medium · UI concept for Quickshell</span><span>Recommended: Integrated edge + Balanced cards</span></footer>
+  </main>
+
+  <script>
+    const panels = [...document.querySelectorAll('.panel')];
+    const navButtons = [...document.querySelectorAll('.shell-nav [data-panel]')];
+    const notch = document.getElementById('liveNotch');
+    const shell = document.getElementById('shell');
+    const designButtons = [...document.querySelectorAll('[data-design-choice]')];
+    const designCopy = {
+      notch: ['Notch', 'Integrated edge', 'A centered display cutout that expands in place into every utility.'],
+      canopy: ['Canopy', 'Continuous calm', 'A full-width status strip with quiet, attached utility sheets.'],
+      branch: ['Branch', 'Modular islands', 'Three independent status capsules feeding crisp centered command cards.'],
+      grove: ['Grove', 'Organic stack', 'A left-growing rail with leaf-like controls and compact stacked windows.'],
+      hearth: ['Hearth', 'Framed warmth', 'A structured ribbon with warm accents and right-anchored utility cards.']
+    };
+    designButtons.forEach(button => button.addEventListener('click', () => {
+      shell.dataset.design = button.dataset.designChoice;
+      designButtons.forEach(item => item.classList.toggle('active', item === button));
+      const [name, mode, description] = designCopy[button.dataset.designChoice];
+      document.getElementById('designName').textContent = name;
+      document.getElementById('designName').nextSibling.textContent = ` · ${mode}`;
+      document.getElementById('designDescription').textContent = description;
+      showPanel('clock');
+    }));
+    function showPanel(id) {
+      panels.forEach(panel => panel.classList.toggle('active', panel.id === id));
+      navButtons.forEach(button => button.classList.toggle('active', button.dataset.panel === id));
+      notch.classList.toggle('open', id !== 'clock');
+      notch.classList.toggle('wide', ['launcher', 'capture'].includes(id));
+      document.getElementById('notificationDrawer').classList.remove('open');
+      document.getElementById('notificationToggle').classList.remove('active');
+      document.getElementById('shell').classList.remove('notifications-open');
+    }
+    navButtons.forEach(button => button.addEventListener('click', () => showPanel(button.dataset.panel)));
+
+    document.querySelectorAll('.toggle').forEach(tile => tile.addEventListener('click', () => tile.classList.toggle('on')));
+    document.querySelectorAll('input[type="range"]').forEach(slider => {
+      const paint = () => {
+        slider.nextElementSibling.value = slider.value + '%';
+        slider.style.background = `linear-gradient(90deg,var(--green) 0 ${slider.value}%,var(--bg-3) ${slider.value}%)`;
+      };
+      slider.addEventListener('input', paint); paint();
+    });
+
+    const launcherInput = document.getElementById('launcherInput');
+    const calcAnswer = document.getElementById('calcAnswer');
+    const calcValue = document.getElementById('calcValue');
+    const calcExpression = document.getElementById('calcExpression');
+    const copyToast = document.getElementById('copyToast');
+    function calculate() {
+      const raw = launcherInput.value.trim();
+      if (!raw || !/^[0-9+\-*/().%\s]+$/.test(raw)) { calcAnswer.hidden = true; return null; }
+      try {
+        const result = Function(`"use strict"; return (${raw})`)();
+        if (!Number.isFinite(result)) throw new Error();
+        calcExpression.textContent = raw.replaceAll('*', '×').replaceAll('/', '÷');
+        calcValue.textContent = Number.isInteger(result) ? result : Number(result.toFixed(8));
+        calcAnswer.hidden = false; return String(calcValue.textContent);
+      } catch { calcAnswer.hidden = true; return null; }
+    }
+    launcherInput.addEventListener('input', calculate);
+    launcherInput.addEventListener('keydown', async event => {
+      if (event.key !== 'Enter') return;
+      const answer = calculate();
+      if (!answer) return;
+      event.preventDefault();
+      try { await navigator.clipboard.writeText(answer); }
+      catch { const area = document.createElement('textarea'); area.value = answer; document.body.append(area); area.select(); document.execCommand('copy'); area.remove(); }
+      copyToast.classList.add('show'); setTimeout(() => copyToast.classList.remove('show'), 1600);
+    });
+    calculate();
+
+    document.getElementById('notificationToggle').addEventListener('click', event => {
+      const drawer = document.getElementById('notificationDrawer');
+      const opening = !drawer.classList.contains('open');
+      if (opening) showPanel('clock');
+      drawer.classList.toggle('open', opening);
+      event.currentTarget.classList.toggle('active', opening);
+      document.getElementById('shell').classList.toggle('notifications-open', opening);
+    });
+    document.querySelectorAll('.segmented button').forEach(button => button.addEventListener('click', () => {
+      document.querySelectorAll('.segmented button').forEach(item => item.classList.remove('active'));
+      button.classList.add('active');
+      const recording = button.dataset.mode === 'record';
+      document.getElementById('micRow').hidden = !recording;
+      document.getElementById('captureButton').textContent = recording ? 'Start recording' : 'Take screenshot';
+    }));
+    document.querySelectorAll('.capture-option').forEach(option => option.addEventListener('click', () => {
+      document.querySelectorAll('.capture-option').forEach(item => item.classList.remove('active')); option.classList.add('active');
+    }));
+    document.querySelectorAll('.todo-item').forEach(item => item.addEventListener('click', () => item.classList.toggle('done')));
+    document.getElementById('addTodo').addEventListener('click', () => {
+      const input = document.getElementById('todoInput'); if (!input.value.trim()) return;
+      const item = document.createElement('div'); item.className = 'todo-item'; item.innerHTML = '<i class="check"></i><span></span>';
+      item.querySelector('span').textContent = input.value.trim(); item.addEventListener('click', () => item.classList.toggle('done'));
+      document.getElementById('todoList').prepend(item); input.value = '';
+    });
+    document.getElementById('todoInput').addEventListener('keydown', event => { if (event.key === 'Enter') document.getElementById('addTodo').click(); });
+    document.getElementById('clockButton').addEventListener('click', () => alert('Implementation hook: launch `gnome-clocks` and apply a compositor floating-window rule.'));
+
+    document.addEventListener('keydown', event => {
+      const meta = event.metaKey;
+      if (meta && event.key.toLowerCase() === 'n') { event.preventDefault(); document.getElementById('notificationToggle').click(); }
+      if (meta && event.key.toLowerCase() === 'v') { event.preventDefault(); showPanel('clipboard'); }
+      if (meta && event.shiftKey && event.key.toLowerCase() === 'c') { event.preventDefault(); showPanel('capture'); }
+      if (meta && event.key === 'Escape') { event.preventDefault(); showPanel('power'); }
+    });
+  </script>
+</body>
+</html>
