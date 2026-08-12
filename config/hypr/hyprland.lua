@@ -75,6 +75,7 @@ local efOrange = "rgba(e69875ee)"
 --
 hl.on("hyprland.start", function()
   hl.exec_cmd("awww-daemon")
+  hl.exec_cmd("qs --no-duplicate --daemonize")
   --   hl.exec_cmd(terminal)
   --   hl.exec_cmd("nm-applet")
   --   hl.exec_cmd("waybar & hyprpaper & firefox")
@@ -285,6 +286,14 @@ hl.device({
 local mainMod = "SUPER" -- Sets "Windows" key as main modifier
 local hyper   = "MOD3"  -- Caps Lock is remapped to a Hyper key (caps:hyper)
 
+-- Quickshell notch. The IPC target keeps compositor binds independent of UI internals.
+hl.bind(hyper .. " + C", hl.dsp.exec_cmd("qs ipc call notch toggle control"))
+hl.bind(mainMod .. " + SPACE", hl.dsp.exec_cmd("qs ipc call notch toggle launcher"))
+hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("qs ipc call notch toggle clipboard"))
+hl.bind(hyper .. " + slash", hl.dsp.exec_cmd("qs ipc call notch toggle todo"))
+hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd("qs ipc call notch toggle capture"))
+hl.bind(mainMod .. " + ESCAPE", hl.dsp.exec_cmd("qs ipc call notch toggle power"))
+
 -- Example binds, see https://wiki.hypr.land/Configuring/Basics/Binds/ for more
 hl.bind(hyper .. " + return", hl.dsp.exec_cmd(terminal))
 hl.bind(hyper .. " + B", hl.dsp.exec_cmd(browser))
@@ -302,7 +311,6 @@ hl.bind(hyper .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + T", hl.dsp.window.float({ action = "toggle" }))
 -- hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(menu))
 -- hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
-hl.bind(mainMod .. " + V", hl.dsp.layout("togglesplit")) -- dwindle only
 hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen())   -- Toggle fullscreen
 
 -- Move focus with mainMod + hjkl

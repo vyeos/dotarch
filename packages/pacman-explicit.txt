@@ -22,6 +22,7 @@ git
 grim
 gst-plugin-pipewire
 hyprland
+hyprlock
 hyprpolkitagent
 iwd
 jq
@@ -54,6 +55,7 @@ qt6-imageformats
 qt6-multimedia-ffmpeg
 qt6-virtualkeyboard
 qt6-wayland
+quickshell
 ripgrep
 sddm
 slurp
@@ -62,6 +64,7 @@ terminus-font
 ttf-dejavu
 ttf-jetbrains-mono-nerd
 ttf-liberation
+wf-recorder
 wireplumber
 wl-clipboard
 xdg-desktop-portal-gtk

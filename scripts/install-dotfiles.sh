@@ -42,6 +42,8 @@ for file in \
 done
 
 link_file "$repo_root/config/nvim" "$HOME/.config/nvim"
+link_file "$repo_root/config/quickshell" "$HOME/.config/quickshell"
+touch "$HOME/.config/quickshell/.qmlls.ini"
 
 systemctl --user daemon-reload
 systemctl --user enable --now restore-internal-mic.service
