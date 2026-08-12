@@ -83,6 +83,34 @@ wifi_networks() {
     | sed -n '5,$p')
 }
 
+wifi_scanning() {
+  local device=$1
+
+  LC_ALL=C iwctl station "$device" show 2>/dev/null \
+    | sed $'s/\033\[[0-9;]*m//g' \
+    | grep -q '^[[:space:]]*Scanning[[:space:]]*yes[[:space:]]*$'
+}
+
+wifi_scan() {
+  local device output cleaned
+  device=$(wifi_device)
+
+  if ! output=$(LC_ALL=C iwctl station "$device" scan 2>&1); then
+    cleaned=$(printf '%s\n' "$output" | sed $'s/\033\[[0-9;]*m//g')
+    if [[ $cleaned != *'Operation already in progress'* ]]; then
+      printf '%s\n' "$cleaned" >&2
+      return 1
+    fi
+  fi
+
+  # iwctl only starts the scan. Keep the caller busy until iwd finishes so a
+  # second request cannot race the operation that is already in progress.
+  for _ in {1..80}; do
+    wifi_scanning "$device" || return 0
+    sleep 0.1
+  done
+}
+
 capture_path() {
   local directory=${XDG_PICTURES_DIR:-"$HOME/Pictures"}/Screenshots
   mkdir -p "$directory"
@@ -141,8 +169,7 @@ case "$action" in
     fi
     ;;
   wifi-scan)
-    device=$(wifi_device)
-    iwctl station "$device" scan
+    wifi_scan
     ;;
   wifi-connect)
     device=$(wifi_device)

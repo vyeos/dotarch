@@ -15,7 +15,7 @@ PanelWindow {
     readonly property int canvasWidth: 552
     readonly property int canvasHeight: 600
     readonly property int requestedBottomPadding: contentPadding
-    readonly property int displayedBottomPadding: contentPadding
+    readonly property int displayedBottomPadding: displayedPanel === "control" && controlPanel.edgeToEdgeDetail ? 0 : contentPadding
     readonly property real targetVisualWidth: ShellState.targetWidth + cornerWing * 2
     readonly property real targetVisualHeight: ShellState.expanded ? panelContentHeight + contentPadding + requestedBottomPadding : collapsedHeight
     readonly property real panelContentHeight: ShellState.expanded ? Math.max(ShellState.panelHeights[ShellState.panel] || 0, requestedPanel ? requestedPanel.implicitHeight : 0) : 0
@@ -295,6 +295,7 @@ PanelWindow {
                 id: controlPanel
 
                 width: parent.width
+                height: parent.height
                 visible: window.displayedPanel === "control"
             }
 

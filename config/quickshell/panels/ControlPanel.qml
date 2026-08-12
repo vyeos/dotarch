@@ -35,6 +35,9 @@ FocusScope {
     property string expandedSection: ""
     property string displayedSection: ""
     property var pendingWifiNetwork: null
+    readonly property bool audioPopoverOpen: expandedSection === "audio"
+    readonly property bool edgeToEdgeDetail: displayedSection === "wifi"
+    readonly property real detailScrollFactor: 2
 
     function toggleSection(section) {
         const nextSection = expandedSection === section ? "" : section;
@@ -53,6 +56,35 @@ FocusScope {
             Backend.scanWifi();
         else if (nextSection === "bluetooth")
             startBluetoothDiscovery();
+    }
+
+    function closeDetails() {
+        if (!expandedSection)
+            return ;
+
+        toggleSection(expandedSection);
+    }
+
+    function toggleWifi() {
+        Backend.toggleWifi();
+    }
+
+    function toggleAudio() {
+        if (sink && sink.audio)
+            sink.audio.muted = !sink.audio.muted;
+    }
+
+    function toggleBluetooth() {
+        if (adapter)
+            adapter.enabled = !adapter.enabled;
+    }
+
+    function scrollDetailList(list, event) {
+        const rawDelta = event.pixelDelta.y !== 0 ? event.pixelDelta.y : event.angleDelta.y * 0.6;
+        const minimum = list.originY;
+        const maximum = Math.max(minimum, minimum + list.contentHeight - list.height);
+        list.contentY = Math.max(minimum, Math.min(maximum, list.contentY - rawDelta * detailScrollFactor));
+        event.accepted = true;
     }
 
     function startBluetoothDiscovery() {
@@ -153,8 +185,13 @@ FocusScope {
     }
 
     implicitWidth: 492
-    readonly property real collapsedImplicitHeight: content.implicitHeight - devicePicker.height - (devicePicker.visible ? content.spacing : 0)
-    implicitHeight: collapsedImplicitHeight + (root.expandedSection ? devicePicker.expandedHeight + content.spacing : 0)
+    implicitHeight: content.implicitHeight
+    Keys.onEscapePressed: (event) => {
+        if (root.expandedSection) {
+            root.closeDetails();
+            event.accepted = true;
+        }
+    }
 
     PwObjectTracker {
         objects: root.audioSinks
@@ -189,10 +226,10 @@ FocusScope {
 
     Connections {
         function onPanelChanged() {
-            if (ShellState.panel !== "control")
+            if (ShellState.panel !== "control") {
+                root.closeDetails();
                 root.stopBluetoothDiscovery();
-            else if (root.expandedSection === "bluetooth")
-                root.startBluetoothDiscovery();
+            }
         }
 
         target: ShellState
@@ -218,11 +255,15 @@ FocusScope {
         }
 
         Row {
+            id: quickActions
+
             width: parent.width
             height: 58
             spacing: 7
 
             ActionTile {
+                id: wifiTile
+
                 width: (parent.width - 14) / 3
                 icon: "󰤨"
                 title: "Wi-Fi"
@@ -230,10 +271,14 @@ FocusScope {
                 active: Backend.wifiEnabled
                 expandable: true
                 expanded: root.expandedSection === "wifi"
-                onClicked: root.toggleSection("wifi")
+                detailAccessibleName: "Show Wi-Fi networks"
+                onClicked: root.toggleWifi()
+                onDetailClicked: root.toggleSection("wifi")
             }
 
             ActionTile {
+                id: audioTile
+
                 width: (parent.width - 14) / 3
                 icon: root.sink && root.sink.audio && root.sink.audio.muted ? "󰝟" : "󰕾"
                 title: "Audio"
@@ -241,12 +286,14 @@ FocusScope {
                 active: root.sink && root.sink.audio && !root.sink.audio.muted
                 expandable: true
                 expanded: root.expandedSection === "audio"
-                onClicked: {
-                    root.toggleSection("audio");
-                }
+                detailAccessibleName: "Show sound outputs"
+                onClicked: root.toggleAudio()
+                onDetailClicked: root.toggleSection("audio")
             }
 
             ActionTile {
+                id: bluetoothTile
+
                 width: (parent.width - 14) / 3
                 icon: "󰂯"
                 title: "Bluetooth"
@@ -254,9 +301,9 @@ FocusScope {
                 active: root.adapter && root.adapter.enabled
                 expandable: true
                 expanded: root.expandedSection === "bluetooth"
-                onClicked: {
-                    root.toggleSection("bluetooth");
-                }
+                detailAccessibleName: "Show Bluetooth devices"
+                onClicked: root.toggleBluetooth()
+                onDetailClicked: root.toggleSection("bluetooth")
             }
 
         }
@@ -264,16 +311,31 @@ FocusScope {
         Rectangle {
             id: devicePicker
 
-            readonly property int expandedHeight: 204
+            parent: root
+            readonly property bool audioMode: root.displayedSection === "audio"
+            readonly property real availableHeight: root.height - y
 
-            width: parent.width
-            height: root.expandedSection ? expandedHeight : 0
+            x: audioMode ? audioTile.x + audioTile.width / 2 - width / 2 : 0
+            y: quickActions.y + quickActions.height + content.spacing
+            z: 20
+            width: audioMode ? 320 : root.width
+            height: audioMode ? Math.min(176, availableHeight) : availableHeight
             radius: Theme.radius
             color: Theme.bg0
             clip: true
             enabled: root.expandedSection !== ""
-            visible: height > 0
+            visible: opacity > 0
             opacity: root.expandedSection ? 1 : 0
+
+            Rectangle {
+                anchors.top: parent.top
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: 42
+                height: 2
+                radius: 1
+                visible: devicePicker.audioMode
+                color: Theme.green
+            }
 
             Item {
                 id: pickerHeader
@@ -284,8 +346,21 @@ FocusScope {
                 anchors.margins: 8
                 height: 30
 
-                Column {
+                IconButton {
+                    id: detailBackButton
+
                     anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 25
+                    height: 25
+                    icon: "←"
+                    accessibleName: "Back to Control Center"
+                    onClicked: root.closeDetails()
+                }
+
+                Column {
+                    anchors.left: detailBackButton.right
+                    anchors.leftMargin: 7
                     anchors.right: powerButton.left
                     anchors.rightMargin: 8
                     anchors.verticalCenter: parent.verticalCenter
@@ -390,6 +465,11 @@ FocusScope {
                 clip: true
                 spacing: 4
                 model: Backend.wifiNetworks
+
+                WheelHandler {
+                    target: null
+                    onWheel: (event) => root.scrollDetailList(wifiList, event)
+                }
 
                 delegate: ConnectionRow {
                     required property var modelData
@@ -527,6 +607,11 @@ FocusScope {
                 spacing: 4
                 model: root.bluetoothDevices
 
+                WheelHandler {
+                    target: null
+                    onWheel: (event) => root.scrollDetailList(bluetoothList, event)
+                }
+
                 delegate: ConnectionRow {
                     required property var modelData
 
@@ -538,14 +623,6 @@ FocusScope {
                     busy: modelData.pairing || modelData.state === BluetoothDeviceState.Connecting || modelData.state === BluetoothDeviceState.Disconnecting
                     actionText: modelData.connected ? "Disconnect" : (modelData.paired || modelData.bonded ? "Connect" : "Pair")
                     onClicked: root.activateBluetoothDevice(modelData)
-                }
-
-            }
-
-            Behavior on height {
-                NumberAnimation {
-                    duration: Theme.animationNormal
-                    easing.type: Easing.OutCubic
                 }
 
             }
@@ -564,6 +641,7 @@ FocusScope {
             id: volumeSlider
 
             width: parent.width
+            enabled: root.expandedSection === ""
             icon: root.sink && root.sink.audio && root.sink.audio.muted ? "󰝟" : "󰕾"
             accessibleName: "Volume"
             value: root.sink && root.sink.audio ? root.sink.audio.volume : 0
@@ -576,7 +654,10 @@ FocusScope {
         }
 
         StyledSlider {
+            id: brightnessSlider
+
             width: parent.width
+            enabled: root.expandedSection === ""
             icon: "󰃠"
             accessibleName: "Brightness"
             value: Backend.brightness / 100
@@ -586,10 +667,13 @@ FocusScope {
         }
 
         Rectangle {
+            id: mediaCard
+
             width: parent.width
             height: 118
             radius: Theme.radius
             clip: true
+            enabled: root.expandedSection === ""
 
             Image {
                 id: mediaArtwork
@@ -778,10 +862,13 @@ FocusScope {
         }
 
         Row {
+            id: trayRow
+
             width: parent.width
             height: 31
             spacing: 5
             visible: trayRepeater.count > 0
+            enabled: root.expandedSection === ""
             layoutDirection: Qt.RightToLeft
 
             Repeater {
@@ -807,6 +894,22 @@ FocusScope {
 
             }
 
+        }
+
+    }
+
+    Rectangle {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        y: quickActions.y + quickActions.height + content.spacing
+        height: root.height - y
+        z: 19
+        visible: root.audioPopoverOpen
+        color: Qt.rgba(0.12, 0.14, 0.15, 0.58)
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: root.closeDetails()
         }
 
     }

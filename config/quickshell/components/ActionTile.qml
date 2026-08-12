@@ -10,8 +10,10 @@ FocusScope {
     property bool active: false
     property bool expandable: false
     property bool expanded: false
+    property string detailAccessibleName: "Show " + title + " options"
 
     signal clicked()
+    signal detailClicked()
 
     implicitHeight: 58
     activeFocusOnTab: true
@@ -25,7 +27,7 @@ FocusScope {
         anchors.fill: parent
         radius: Theme.radius
         color: root.active ? Theme.green : Theme.bg0
-        border.width: root.activeFocus ? 2 : 0
+        border.width: root.activeFocus || detailButton.activeFocus ? 2 : 0
         border.color: Theme.foreground
 
         Behavior on color {
@@ -38,7 +40,10 @@ FocusScope {
     }
 
     Row {
-        anchors.fill: parent
+        anchors.left: parent.left
+        anchors.right: detailButton.visible ? detailButton.left : parent.right
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
         anchors.margins: 9
         spacing: 8
 
@@ -61,7 +66,7 @@ FocusScope {
 
         Column {
             anchors.verticalCenter: parent.verticalCenter
-            width: parent.width - 38 - (root.expandable ? 15 : 0)
+            width: parent.width - 38
             spacing: 2
 
             ShellText {
@@ -82,21 +87,53 @@ FocusScope {
             }
 
         }
+    }
+
+    MouseArea {
+        anchors.left: parent.left
+        anchors.right: detailButton.visible ? detailButton.left : parent.right
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        cursorShape: Qt.PointingHandCursor
+        onClicked: root.clicked()
+    }
+
+    FocusScope {
+        id: detailButton
+
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        width: root.expandable ? 31 : 0
+        visible: root.expandable
+        activeFocusOnTab: visible
+        Keys.onReturnPressed: root.detailClicked()
+        Keys.onEnterPressed: root.detailClicked()
+        Keys.onSpacePressed: root.detailClicked()
+        Accessible.role: Accessible.Button
+        Accessible.name: root.detailAccessibleName
+
+        Rectangle {
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            width: 1
+            height: parent.height - 18
+            color: root.active ? Qt.rgba(0.12, 0.14, 0.12, 0.18) : Theme.bg2
+        }
 
         ShellText {
-            anchors.verticalCenter: parent.verticalCenter
-            visible: root.expandable
+            anchors.centerIn: parent
             text: root.expanded ? "󰅃" : "󰅀"
             color: root.active ? Qt.rgba(0.12, 0.14, 0.12, 0.62) : Theme.mutedDark
             font.pixelSize: 11
         }
 
-    }
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: root.detailClicked()
+        }
 
-    MouseArea {
-        anchors.fill: parent
-        cursorShape: Qt.PointingHandCursor
-        onClicked: root.clicked()
     }
 
 }
