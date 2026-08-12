@@ -237,7 +237,9 @@ PanelWindow {
                 ShellText {
                     anchors.fill: parent
                     visible: !Backend.recording
+                    horizontalAlignment: Text.AlignRight
                     verticalAlignment: Text.AlignVCenter
+                    rightPadding: 8
                     text: (window.batteryCharging ? "" : "󰁹") + " " + Math.round(window.batteryLevel * 100) + "%"
                     color: window.batteryLevel < 0.2 ? Theme.red : Theme.green
                     font.pixelSize: 11
