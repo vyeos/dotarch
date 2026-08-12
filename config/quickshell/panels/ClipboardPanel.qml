@@ -19,6 +19,19 @@ FocusScope {
         searchInput.forceActiveFocus(Qt.TabFocusReason);
     }
 
+    Connections {
+        function onPanelChanged() {
+            if (ShellState.panel !== "clipboard") {
+                searchInput.clear();
+                root.selectedIndex = 0;
+                root.previewVisible = false;
+                root.previewItemId = "";
+            }
+        }
+
+        target: ShellState
+    }
+
     function selectedItem() {
         if (filteredItems.values.length === 0)
             return null;

@@ -213,6 +213,7 @@ FocusScope {
 
         PanelHeader {
             title: "Control Center"
+            showCloseButton: false
             onCloseRequested: ShellState.close()
         }
 

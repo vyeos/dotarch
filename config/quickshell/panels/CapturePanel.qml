@@ -10,6 +10,21 @@ FocusScope {
     property bool recordingMode: false
     readonly property var source: Pipewire.defaultAudioSource
 
+    function takeInitialFocus() {
+        const modes = ["full", "window", "region"];
+        root.focusScreenshotMode(Math.max(0, modes.indexOf(root.mode)));
+    }
+
+    function focusScreenshotMode(index) {
+        const count = screenshotModes.count;
+        const next = (index + count) % count;
+        const item = screenshotModes.itemAt(next);
+        if (item) {
+            root.mode = item.modelData.key;
+            item.forceActiveFocus(Qt.TabFocusReason);
+        }
+    }
+
     implicitWidth: 367
     implicitHeight: content.implicitHeight
 
@@ -24,6 +39,18 @@ FocusScope {
         onTriggered: Backend.capture(root.mode)
     }
 
+    Shortcut {
+        sequence: "Return"
+        enabled: ShellState.panel === "capture"
+        onActivated: captureButton.activate()
+    }
+
+    Shortcut {
+        sequence: "Enter"
+        enabled: ShellState.panel === "capture"
+        onActivated: captureButton.activate()
+    }
+
     Column {
         id: content
 
@@ -32,6 +59,7 @@ FocusScope {
 
         PanelHeader {
             title: "Capture"
+            showCloseButton: false
             onCloseRequested: ShellState.close()
         }
 
@@ -94,6 +122,8 @@ FocusScope {
             visible: !root.recordingMode
 
             Repeater {
+                id: screenshotModes
+
                 model: [{
                     "key": "full",
                     "icon": "󰍹",
@@ -110,6 +140,7 @@ FocusScope {
 
                 delegate: ActionTile {
                     required property var modelData
+                    required property int index
 
                     width: (parent.width - 12) / 3
                     height: parent.height
@@ -117,7 +148,11 @@ FocusScope {
                     title: modelData.title
                     subtitle: ""
                     active: root.mode === modelData.key
-                    onClicked: root.mode = modelData.key
+                    Keys.onLeftPressed: root.focusScreenshotMode(index - 1)
+                    Keys.onUpPressed: root.focusScreenshotMode(index - 1)
+                    Keys.onRightPressed: root.focusScreenshotMode(index + 1)
+                    Keys.onDownPressed: root.focusScreenshotMode(index + 1)
+                    onClicked: root.focusScreenshotMode(index)
                 }
 
             }

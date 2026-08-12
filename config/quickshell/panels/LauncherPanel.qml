@@ -16,6 +16,17 @@ FocusScope {
         searchInput.forceActiveFocus(Qt.TabFocusReason);
     }
 
+    Connections {
+        function onPanelChanged() {
+            if (ShellState.panel !== "launcher") {
+                searchInput.clear();
+                root.selectedIndex = 0;
+            }
+        }
+
+        target: ShellState
+    }
+
     function activateSelection() {
         if (hasAnswer) {
             Quickshell.clipboardText = String(answer);

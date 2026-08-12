@@ -117,6 +117,16 @@ PanelWindow {
                 event.accepted = true;
                 return ;
             }
+            if (event.key === Qt.Key_Down || event.key === Qt.Key_Right) {
+                window.moveFocus(true);
+                event.accepted = true;
+                return ;
+            }
+            if (event.key === Qt.Key_Up || event.key === Qt.Key_Left) {
+                window.moveFocus(false);
+                event.accepted = true;
+                return ;
+            }
         }
 
         Rectangle {
@@ -385,18 +395,6 @@ PanelWindow {
                 window.clockRevealed = true;
 
         }
-    }
-
-    Shortcut {
-        sequence: "Alt+N"
-        enabled: ShellState.expanded
-        onActivated: window.moveFocus(true)
-    }
-
-    Shortcut {
-        sequence: "Alt+P"
-        enabled: ShellState.expanded
-        onActivated: window.moveFocus(false)
     }
 
     Shortcut {

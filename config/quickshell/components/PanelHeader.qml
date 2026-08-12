@@ -5,6 +5,7 @@ Row {
     id: root
 
     property string title: ""
+    property bool showCloseButton: true
 
     signal closeRequested()
 
@@ -14,6 +15,7 @@ Row {
     IconButton {
         width: 30
         height: 30
+        visible: root.showCloseButton
         icon: "←"
         accessibleName: "Close " + root.title
         onClicked: root.closeRequested()
