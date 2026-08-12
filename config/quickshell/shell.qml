@@ -1,12 +1,29 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Services.Notifications
 import qs
 
 ShellRoot {
     id: root
 
     property string pendingCaptureMode: ""
+
+    NotificationServer {
+        id: notificationServer
+
+        keepOnReload: true
+        bodySupported: true
+        bodyMarkupSupported: false
+        actionsSupported: true
+        imageSupported: true
+        onNotification: notification => notification.tracked = true
+    }
+
+    NotificationPopups {
+        notificationModel: notificationServer.trackedNotifications
+        screen: Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
+    }
 
     Variants {
         model: Quickshell.screens
