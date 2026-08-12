@@ -23,7 +23,7 @@ Singleton {
     })
     property string panel: "clock"
     readonly property bool expanded: panel !== "clock"
-    readonly property int targetWidth: expanded ? panelWidths[panel] : 236
+    readonly property int targetWidth: expanded ? panelWidths[panel] : 170
     property alias todos: persistence.todos
 
     function show(name) {

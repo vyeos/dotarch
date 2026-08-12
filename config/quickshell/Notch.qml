@@ -223,8 +223,8 @@ PanelWindow {
             anchors.right: notchBody.right
             anchors.top: parent.top
             height: window.collapsedHeight
-            anchors.leftMargin: 12
-            anchors.rightMargin: 12
+            anchors.leftMargin: 6
+            anchors.rightMargin: 6
             visible: opacity > 0
             opacity: window.clockRevealed ? 1 : 0
 
@@ -252,7 +252,7 @@ PanelWindow {
                 height: parent.height
                 horizontalAlignment: Text.AlignRight
                 verticalAlignment: Text.AlignVCenter
-                text: Qt.formatDateTime(clock.date, "ddd d MMM")
+                text: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"][clock.date.getDay()] + " " + Qt.formatDateTime(clock.date, "d/M")
                 color: Theme.foreground
                 font.pixelSize: 11
                 font.weight: Font.DemiBold
