@@ -75,6 +75,8 @@ local efOrange = "rgba(e69875ee)"
 --
 hl.on("hyprland.start", function()
   hl.exec_cmd("awww-daemon")
+  hl.exec_cmd("wl-paste --type text --watch cliphist store")
+  hl.exec_cmd("wl-paste --type image --watch cliphist store")
   hl.exec_cmd("qs --no-duplicate --daemonize")
   --   hl.exec_cmd(terminal)
   --   hl.exec_cmd("nm-applet")
