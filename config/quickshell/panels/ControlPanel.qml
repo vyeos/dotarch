@@ -461,21 +461,8 @@ FocusScope {
                 anchors.margins: 8
                 height: 30
 
-                IconButton {
-                    id: detailBackButton
-
-                    anchors.left: parent.left
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 25
-                    height: 25
-                    icon: "←"
-                    accessibleName: "Back to Control Center"
-                    onClicked: root.closeDetails()
-                }
-
                 Column {
-                    anchors.left: detailBackButton.right
-                    anchors.leftMargin: 7
+                    anchors.left: parent.left
                     anchors.right: powerButton.left
                     anchors.rightMargin: 8
                     anchors.verticalCenter: parent.verticalCenter
@@ -575,7 +562,7 @@ FocusScope {
                 anchors.leftMargin: 7
                 anchors.rightMargin: 7
                 anchors.topMargin: 5
-                anchors.bottomMargin: wifiPasswordRow.height > 0 ? 5 : 7
+                anchors.bottomMargin: wifiPasswordRow.height > 0 ? 5 : 0
                 visible: root.displayedSection === "wifi"
                 clip: true
                 spacing: 4
