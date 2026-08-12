@@ -39,6 +39,15 @@ FocusScope {
         return filteredItems.values[Math.min(selectedIndex, filteredItems.values.length - 1)];
     }
 
+    function moveSelection(offset) {
+        const count = filteredItems.values.length;
+        if (count === 0)
+            return;
+
+        selectedIndex = Math.max(0, Math.min(count - 1, selectedIndex + offset));
+        clipboardList.positionViewAtIndex(selectedIndex, ListView.Contain);
+    }
+
     function togglePreview() {
         const item = selectedItem();
         if (!item)
@@ -80,43 +89,37 @@ FocusScope {
         width: parent.width
         spacing: 8
 
-        PanelHeader {
-            title: "Clipboard"
-            onCloseRequested: ShellState.close()
-        }
-
         Rectangle {
             width: parent.width
-            height: 40
-            radius: Theme.radiusSmall
-            color: Theme.bg0
-            border.width: searchInput.activeFocus ? 2 : 1
-            border.color: searchInput.activeFocus ? Theme.primary : Theme.bg2
+            height: 42
+            color: "transparent"
 
             ShellText {
                 anchors.left: parent.left
-                anchors.leftMargin: 11
+                anchors.leftMargin: 12
                 anchors.verticalCenter: parent.verticalCenter
                 text: "󰍉"
                 color: Theme.muted
+                font.pixelSize: 14
             }
 
             TextInput {
                 id: searchInput
 
                 anchors.left: parent.left
-                anchors.leftMargin: 35
+                anchors.leftMargin: 38
                 anchors.right: parent.right
                 anchors.rightMargin: 10
                 anchors.verticalCenter: parent.verticalCenter
                 color: Theme.foreground
                 font.family: Theme.fontFamily
-                font.pixelSize: 12
+                font.pixelSize: 13
                 clip: true
+                selectByMouse: true
                 activeFocusOnTab: true
                 onTextChanged: root.selectedIndex = 0
-                Keys.onDownPressed: root.selectedIndex = Math.min(filteredItems.values.length - 1, root.selectedIndex + 1)
-                Keys.onUpPressed: root.selectedIndex = Math.max(0, root.selectedIndex - 1)
+                Keys.onDownPressed: root.moveSelection(1)
+                Keys.onUpPressed: root.moveSelection(-1)
                 Keys.onReturnPressed: root.activateSelection()
                 Keys.onEnterPressed: root.activateSelection()
                 Keys.onSpacePressed: root.togglePreview()
@@ -154,7 +157,7 @@ FocusScope {
                 objectProp: "id"
                 values: Backend.clipboardItems.filter((item) => {
                     return !searchInput.text || item.preview.toLowerCase().includes(searchInput.text.toLowerCase());
-                }).slice(0, 5)
+                })
             }
 
             delegate: Rectangle {

@@ -8,6 +8,7 @@ Singleton {
 
     readonly property string helper: Quickshell.shellPath("scripts/shell-actions.sh")
     property int brightness: 0
+    property int brightnessInFlight: -1
     property bool recording: false
     property var clipboardItems: []
     property string clipboardContents: ""
@@ -32,7 +33,16 @@ Singleton {
 
     function setBrightness(value) {
         brightness = Math.max(0, Math.min(100, Math.round(value)));
-        brightnessCommit.restart();
+        if (!brightnessCommit.running && !brightnessSetProcess.running)
+            brightnessCommit.start();
+    }
+
+    function commitBrightness() {
+        if (brightnessSetProcess.running)
+            return;
+
+        brightnessInFlight = brightness;
+        brightnessSetProcess.exec([helper, "brightness-set", String(brightnessInFlight)]);
     }
 
     function refreshClipboard() {
@@ -149,8 +159,12 @@ Singleton {
         id: brightnessSetProcess
 
         onExited: (exitCode) => {
-            if (exitCode !== 0)
+            if (exitCode !== 0) {
                 brightnessProcess.running = true;
+                return;
+            }
+            if (root.brightness !== root.brightnessInFlight)
+                brightnessCommit.start();
 
         }
     }
@@ -303,8 +317,8 @@ Singleton {
     Timer {
         id: brightnessCommit
 
-        interval: 75
-        onTriggered: brightnessSetProcess.exec([root.helper, "brightness-set", String(root.brightness)])
+        interval: 40
+        onTriggered: root.commitBrightness()
     }
 
     Timer {

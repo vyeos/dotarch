@@ -19,7 +19,7 @@ Singleton {
         "clipboard": 80,
         "todo": 87,
         "capture": 208,
-        "power": 64
+        "power": 56
     })
     property string panel: "clock"
     readonly property bool expanded: panel !== "clock"

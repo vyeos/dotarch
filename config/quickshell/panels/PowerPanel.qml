@@ -39,6 +39,14 @@ FocusScope {
         ShellState.close();
     }
 
+    function focusAction(index) {
+        const count = actions.length;
+        const next = (index + count) % count;
+        const item = actionRepeater.itemAt(next);
+        if (item)
+            item.forceActiveFocus(Qt.TabFocusReason);
+    }
+
     implicitWidth: 352
     implicitHeight: content.implicitHeight
 
@@ -57,15 +65,18 @@ FocusScope {
 
         Row {
             width: parent.width
-            height: 64
+            height: 56
             spacing: 8
 
             Repeater {
+                id: actionRepeater
+
                 model: root.actions
 
                 delegate: FocusScope {
                     id: actionButton
 
+                    required property int index
                     required property var modelData
                     readonly property bool highlighted: activeFocus || pointer.containsMouse
 
@@ -75,12 +86,16 @@ FocusScope {
                     Keys.onReturnPressed: root.activate(modelData.key)
                     Keys.onEnterPressed: root.activate(modelData.key)
                     Keys.onSpacePressed: root.activate(modelData.key)
+                    Keys.onLeftPressed: root.focusAction(index - 1)
+                    Keys.onUpPressed: root.focusAction(index - 1)
+                    Keys.onRightPressed: root.focusAction(index + 1)
+                    Keys.onDownPressed: root.focusAction(index + 1)
                     Accessible.role: Accessible.Button
                     Accessible.name: modelData.title
 
                     Rectangle {
                         anchors.fill: parent
-                        radius: 13
+                        radius: 10
                         color: root.pendingAction === modelData.key ? Theme.yellow : (actionButton.highlighted ? Theme.primary : Theme.bg1)
                         border.width: parent.activeFocus ? 2 : 0
                         border.color: Theme.primary
@@ -110,8 +125,8 @@ FocusScope {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: root.pendingAction === modelData.key ? "Confirm" : modelData.title
                             color: root.pendingAction === modelData.key || actionButton.highlighted ? Theme.bgDim : Theme.muted
-                            font.pixelSize: 8
-                            font.weight: Font.Bold
+                            font.pixelSize: 9
+                            font.weight: Font.Black
                         }
 
                     }
