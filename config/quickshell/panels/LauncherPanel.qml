@@ -46,8 +46,7 @@ FocusScope {
     function activateSelection() {
         if (hasAnswer) {
             Quickshell.clipboardText = String(answer);
-            copiedLabel.opacity = 1;
-            copiedTimer.restart();
+            ShellState.close();
             return ;
         }
         const values = filteredApps.values;
@@ -139,33 +138,6 @@ FocusScope {
                     font.weight: Font.Bold
                 }
 
-            }
-
-            ShellText {
-                id: copiedLabel
-
-                anchors.right: parent.right
-                anchors.rightMargin: 12
-                anchors.bottom: parent.bottom
-                anchors.bottomMargin: 10
-                text: "Copied"
-                color: Theme.green
-                opacity: 0
-
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: Theme.animationFast
-                    }
-
-                }
-
-            }
-
-            Timer {
-                id: copiedTimer
-
-                interval: 1200
-                onTriggered: copiedLabel.opacity = 0
             }
 
             Behavior on height {
