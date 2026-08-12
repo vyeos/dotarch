@@ -18,7 +18,7 @@ Singleton {
         "launcher": 290,
         "clipboard": 80,
         "todo": 87,
-        "capture": 199,
+        "capture": 208,
         "power": 64
     })
     property string panel: "clock"
