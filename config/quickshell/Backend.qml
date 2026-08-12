@@ -7,12 +7,6 @@ Singleton {
     id: root
 
     readonly property string helper: Quickshell.shellPath("scripts/shell-actions.sh")
-    property string wifiName: "Disconnected"
-    property bool wifiEnabled: false
-    property var wifiNetworks: []
-    property bool wifiScanning: false
-    property string wifiConnecting: ""
-    property string wifiError: ""
     property int brightness: 0
     property bool recording: false
     property var clipboardItems: []
@@ -31,40 +25,9 @@ Singleton {
     property var pendingGeometryCapture: null
 
     function refreshStatus() {
-        wifiProcess.running = true;
         if (!brightnessCommit.running && !brightnessSetProcess.running)
             brightnessProcess.running = true;
 
-    }
-
-    function refresh() {
-        refreshStatus();
-        wifiNetworksProcess.running = true;
-    }
-
-    function toggleWifi() {
-        actionProcess.exec([helper, "wifi-toggle"]);
-    }
-
-    function scanWifi() {
-        if (!wifiEnabled || wifiScanning)
-            return ;
-
-        wifiError = "";
-        wifiScanning = true;
-        wifiScanProcess.exec([helper, "wifi-scan"]);
-    }
-
-    function connectWifi(name, passphrase) {
-        wifiError = "";
-        wifiConnecting = name;
-        wifiConnectionProcess.exec([helper, "wifi-connect", name, passphrase || ""]);
-    }
-
-    function disconnectWifi() {
-        wifiError = "";
-        wifiConnecting = wifiName;
-        wifiConnectionProcess.exec([helper, "wifi-disconnect"]);
     }
 
     function setBrightness(value) {
@@ -168,89 +131,6 @@ Singleton {
 
     function power(action) {
         actionProcess.exec([helper, "power", action]);
-    }
-
-    Process {
-        id: wifiProcess
-
-        command: [root.helper, "wifi-status"]
-        running: true
-
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const parts = text.trim().split("\t");
-                root.wifiEnabled = parts[0] === "on";
-                root.wifiName = parts[1] || (root.wifiEnabled ? "Not connected" : "Wi-Fi off");
-            }
-        }
-
-    }
-
-    Process {
-        id: wifiNetworksProcess
-
-        command: [root.helper, "wifi-list"]
-        running: true
-
-        stdout: StdioCollector {
-            onStreamFinished: {
-                root.wifiNetworks = text.trim().split("\n").filter((line) => {
-                    return line.length > 0;
-                }).map((line) => {
-                    const parts = line.split("\t");
-                    return {
-                        "name": parts[0],
-                        "security": parts[1] || "open",
-                        "signal": Number(parts[2]) || -10000,
-                        "connected": parts[3] === "true",
-                        "known": parts[4] === "true"
-                    };
-                });
-            }
-        }
-
-    }
-
-    Process {
-        id: wifiScanProcess
-
-        onExited: (exitCode) => {
-            root.wifiScanning = false;
-            if (exitCode !== 0)
-                root.wifiError = "Could not scan for networks";
-
-            wifiNetworksProcess.running = true;
-        }
-
-        stderr: StdioCollector {
-            onStreamFinished: {
-                if (text.trim())
-                    root.wifiError = text.trim().split("\n").pop();
-
-            }
-        }
-
-    }
-
-    Process {
-        id: wifiConnectionProcess
-
-        onExited: (exitCode) => {
-            root.wifiConnecting = "";
-            if (exitCode !== 0 && !root.wifiError)
-                root.wifiError = "Could not connect to the network";
-
-            root.refresh();
-        }
-
-        stderr: StdioCollector {
-            onStreamFinished: {
-                if (text.trim())
-                    root.wifiError = text.trim().split("\n").pop();
-
-            }
-        }
-
     }
 
     Process {
@@ -413,7 +293,7 @@ Singleton {
     Process {
         id: actionProcess
 
-        onExited: root.refresh()
+        onExited: root.refreshStatus()
     }
 
     Process {

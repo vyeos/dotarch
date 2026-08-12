@@ -24,7 +24,6 @@ gst-plugin-pipewire
 hyprland
 hyprlock
 hyprpolkitagent
-iwd
 jq
 kdenlive
 kwin
@@ -38,6 +37,7 @@ loupe
 lsp-plugins-lv2
 mkinitcpio
 nautilus
+networkmanager
 neovim
 noto-fonts
 noto-fonts-cjk

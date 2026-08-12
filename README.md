@@ -20,7 +20,10 @@ and currently contain an account-specific path.
    `yay` with the [AUR instructions](https://aur.archlinux.org/packages/yay),
    then rerun the script.
 3. Run `scripts/install-system.sh`, then `sudo locale-gen` and
-   `sudo mkinitcpio -P`. The installer enables SDDM, iwd, and Bluetooth.
+   `sudo mkinitcpio -P`. Link `/etc/resolv.conf` to
+   `/run/systemd/resolve/stub-resolv.conf` before rebooting. The installer enables
+   SDDM, NetworkManager, systemd-resolved, and Bluetooth, and disables the
+   conflicting iwd and systemd-networkd services.
 4. Run `scripts/install-dotfiles.sh`. It creates symlinks and moves any replaced
    files to `~/.dotfiles-backups/<timestamp>/`.
 

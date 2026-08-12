@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Effects
 import Quickshell
 import Quickshell.Bluetooth
+import Quickshell.Networking
 import Quickshell.Services.Mpris
 import Quickshell.Services.Pipewire
 import Quickshell.Services.SystemTray
@@ -15,6 +16,18 @@ FocusScope {
     readonly property var sink: Pipewire.defaultAudioSink
     readonly property var player: Mpris.players.values.length > 0 ? Mpris.players.values[0] : null
     readonly property var adapter: Bluetooth.defaultAdapter
+    readonly property var wifiDevice: Networking.devices.values.find((device) => {
+        return device.type === DeviceType.Wifi;
+    }) || null
+    readonly property var wifiNetworks: wifiDevice ? wifiDevice.networks.values.slice().sort((left, right) => {
+        if (left.connected !== right.connected)
+            return left.connected ? -1 : 1;
+
+        return right.signalStrength - left.signalStrength;
+    }) : []
+    readonly property var connectedWifi: wifiNetworks.find((network) => {
+        return network.connected;
+    }) || null
     readonly property var audioSinks: Pipewire.nodes.values.filter((node) => {
         return node.isSink && !node.isStream && node.audio;
     })
@@ -35,12 +48,17 @@ FocusScope {
     property string expandedSection: ""
     property string displayedSection: ""
     property var pendingWifiNetwork: null
+    property string wifiError: ""
+    property bool wifiRefreshPending: false
     readonly property bool audioPopoverOpen: expandedSection === "audio"
     readonly property bool edgeToEdgeDetail: displayedSection === "wifi"
     readonly property real detailScrollFactor: 2
 
     function toggleSection(section) {
         const nextSection = expandedSection === section ? "" : section;
+        if (expandedSection === "wifi" && nextSection !== "wifi")
+            stopWifiScanner();
+
         if (expandedSection === "bluetooth" && nextSection !== "bluetooth")
             stopBluetoothDiscovery();
 
@@ -53,7 +71,7 @@ FocusScope {
         }
         pendingWifiNetwork = null;
         if (nextSection === "wifi")
-            Backend.scanWifi();
+            startWifiScanner();
         else if (nextSection === "bluetooth")
             startBluetoothDiscovery();
     }
@@ -66,7 +84,7 @@ FocusScope {
     }
 
     function toggleWifi() {
-        Backend.toggleWifi();
+        Networking.wifiEnabled = !Networking.wifiEnabled;
     }
 
     function toggleAudio() {
@@ -87,6 +105,38 @@ FocusScope {
         event.accepted = true;
     }
 
+    function startWifiScanner() {
+        wifiError = "";
+        if (!wifiDevice || !Networking.wifiEnabled)
+            return ;
+
+        wifiDevice.scannerEnabled = true;
+        wifiRefreshPending = true;
+        wifiRefreshTimer.restart();
+    }
+
+    function restartWifiScanner() {
+        if (!wifiDevice || !Networking.wifiEnabled || wifiRefreshPending)
+            return ;
+
+        wifiError = "";
+        wifiRefreshPending = true;
+        wifiDevice.scannerEnabled = false;
+        Qt.callLater(() => {
+            if (root.wifiDevice && root.expandedSection === "wifi" && Networking.wifiEnabled)
+                root.wifiDevice.scannerEnabled = true;
+
+            wifiRefreshTimer.restart();
+        });
+    }
+
+    function stopWifiScanner() {
+        wifiRefreshTimer.stop();
+        wifiRefreshPending = false;
+        if (wifiDevice && wifiDevice.scannerEnabled)
+            wifiDevice.scannerEnabled = false;
+    }
+
     function startBluetoothDiscovery() {
         if (!adapter || !adapter.enabled)
             return ;
@@ -103,30 +153,73 @@ FocusScope {
     }
 
     function selectWifi(network) {
-        if (Backend.wifiConnecting)
+        if (!network || network.stateChanging)
             return ;
 
         if (network.connected) {
-            Backend.disconnectWifi();
+            network.disconnect();
             return ;
         }
-        if (network.security !== "open" && !network.known) {
+        wifiError = "";
+        if (!network.known && wifiUsesPsk(network.security)) {
             pendingWifiNetwork = network;
             Qt.callLater(() => {
                 return wifiPasswordInput.forceActiveFocus(Qt.TabFocusReason);
             });
             return ;
         }
-        Backend.connectWifi(network.name, "");
+        network.connect();
     }
 
     function connectPendingWifi() {
         if (!pendingWifiNetwork || !wifiPasswordInput.text)
             return ;
 
-        Backend.connectWifi(pendingWifiNetwork.name, wifiPasswordInput.text);
+        wifiError = "";
+        pendingWifiNetwork.connectWithPsk(wifiPasswordInput.text);
         wifiPasswordInput.clear();
         pendingWifiNetwork = null;
+    }
+
+    function wifiUsesPsk(security) {
+        return security === WifiSecurityType.WpaPsk || security === WifiSecurityType.Wpa2Psk || security === WifiSecurityType.Sae;
+    }
+
+    function wifiSecurityLabel(security) {
+        switch (security) {
+        case WifiSecurityType.Open:
+            return "Open network";
+        case WifiSecurityType.Sae:
+            return "WPA3";
+        case WifiSecurityType.Wpa2Psk:
+            return "WPA2";
+        case WifiSecurityType.WpaPsk:
+            return "WPA";
+        case WifiSecurityType.Owe:
+            return "Enhanced Open";
+        case WifiSecurityType.Wpa2Eap:
+            return "WPA2 Enterprise";
+        case WifiSecurityType.WpaEap:
+            return "WPA Enterprise";
+        case WifiSecurityType.Wpa3SuiteB192:
+            return "WPA3 Enterprise";
+        case WifiSecurityType.StaticWep:
+        case WifiSecurityType.DynamicWep:
+            return "WEP";
+        case WifiSecurityType.Leap:
+            return "LEAP";
+        default:
+            return "Secured";
+        }
+    }
+
+    function wifiConnectionFailed(network, reason) {
+        if (reason === ConnectionFailReason.NoSecrets || reason === ConnectionFailReason.WifiAuthTimeout)
+            wifiError = "Authentication failed for " + network.name;
+        else if (reason === ConnectionFailReason.WifiNetworkLost)
+            wifiError = "Network lost while connecting";
+        else
+            wifiError = "Could not connect to " + network.name;
     }
 
     function activateBluetoothDevice(device) {
@@ -154,23 +247,23 @@ FocusScope {
         return "󰂯";
     }
 
-    function wifiSignalDbm(signal) {
+    function wifiSignalPercent(signal) {
         const value = Number(signal);
         if (!Number.isFinite(value))
             return null;
 
-        return Math.round(value < -200 ? value / 100 : value);
+        return Math.round(Math.max(0, Math.min(1, value)) * 100);
     }
 
     function wifiSignalIcon(signal) {
-        const dbm = wifiSignalDbm(signal);
-        if (dbm === null)
+        const strength = Number(signal);
+        if (!Number.isFinite(strength))
             return "󰤯";
 
-        if (dbm >= -55)
+        if (strength >= 0.7)
             return "󰤨";
 
-        if (dbm >= -70)
+        if (strength >= 0.4)
             return "󰤢";
 
         return "󰤟";
@@ -186,6 +279,11 @@ FocusScope {
 
     implicitWidth: 492
     implicitHeight: content.implicitHeight
+    onWifiDeviceChanged: {
+        if (root.wifiDevice && root.expandedSection === "wifi")
+            root.startWifiScanner();
+    }
+    Component.onDestruction: root.stopWifiScanner()
     Keys.onEscapePressed: (event) => {
         if (root.expandedSection) {
             root.closeDetails();
@@ -195,6 +293,13 @@ FocusScope {
 
     PwObjectTracker {
         objects: root.audioSinks
+    }
+
+    Timer {
+        id: wifiRefreshTimer
+
+        interval: 1000
+        onTriggered: root.wifiRefreshPending = false
     }
 
     Timer {
@@ -212,6 +317,17 @@ FocusScope {
             if (!root.expandedSection)
                 root.displayedSection = "";
         }
+    }
+
+    Connections {
+        function onWifiEnabledChanged() {
+            if (Networking.wifiEnabled && root.expandedSection === "wifi")
+                Qt.callLater(() => root.startWifiScanner());
+            else if (!Networking.wifiEnabled)
+                root.stopWifiScanner();
+        }
+
+        target: Networking
     }
 
     Connections {
@@ -267,8 +383,8 @@ FocusScope {
                 width: (parent.width - 14) / 3
                 icon: "󰤨"
                 title: "Wi-Fi"
-                subtitle: Backend.wifiName
-                active: Backend.wifiEnabled
+                subtitle: root.connectedWifi ? root.connectedWifi.name : (Networking.wifiEnabled ? "Not connected" : "Off")
+                active: Networking.wifiEnabled
                 expandable: true
                 expanded: root.expandedSection === "wifi"
                 detailAccessibleName: "Show Wi-Fi networks"
@@ -377,14 +493,14 @@ FocusScope {
                         width: parent.width
                         text: {
                             if (root.displayedSection === "wifi")
-                                return Backend.wifiError || (Backend.wifiScanning ? "Scanning…" : Backend.wifiNetworks.length + " available");
+                                return root.wifiError || (root.wifiRefreshPending ? "Refreshing…" : root.wifiNetworks.length + " available");
 
                             if (root.displayedSection === "audio")
                                 return root.audioSinks.length + " available";
 
                             return root.adapter && root.adapter.discovering ? "Looking for devices…" : root.bluetoothDevices.length + " available";
                         }
-                        color: Backend.wifiError && root.displayedSection === "wifi" ? Theme.red : Theme.muted
+                        color: root.wifiError && root.displayedSection === "wifi" ? Theme.red : Theme.muted
                         elide: Text.ElideRight
                         font.pixelSize: 8
                     }
@@ -402,7 +518,7 @@ FocusScope {
                     icon: root.displayedSection === "audio" ? (root.sink && root.sink.audio && root.sink.audio.muted ? "󰝟" : "󰕾") : "󰐥"
                     accessibleName: {
                         if (root.displayedSection === "wifi")
-                            return Backend.wifiEnabled ? "Turn Wi-Fi off" : "Turn Wi-Fi on";
+                            return Networking.wifiEnabled ? "Turn Wi-Fi off" : "Turn Wi-Fi on";
 
                         if (root.displayedSection === "audio")
                             return root.sink && root.sink.audio && root.sink.audio.muted ? "Unmute audio" : "Mute audio";
@@ -411,7 +527,7 @@ FocusScope {
                     }
                     foregroundColor: {
                         if (root.displayedSection === "wifi")
-                            return Backend.wifiEnabled ? Theme.green : Theme.muted;
+                            return Networking.wifiEnabled ? Theme.green : Theme.muted;
 
                         if (root.displayedSection === "audio")
                             return root.sink && root.sink.audio && !root.sink.audio.muted ? Theme.green : Theme.muted;
@@ -420,7 +536,7 @@ FocusScope {
                     }
                     onClicked: {
                         if (root.displayedSection === "wifi")
-                            Backend.toggleWifi();
+                            root.toggleWifi();
                         else if (root.displayedSection === "audio" && root.sink && root.sink.audio)
                             root.sink.audio.muted = !root.sink.audio.muted;
                         else if (root.adapter)
@@ -436,13 +552,13 @@ FocusScope {
                     width: 25
                     height: 25
                     visible: root.displayedSection === "wifi" || root.displayedSection === "bluetooth"
-                    enabled: root.displayedSection === "wifi" ? Backend.wifiEnabled && !Backend.wifiScanning : root.adapter && root.adapter.enabled && !root.adapter.discovering
+                    enabled: root.displayedSection === "wifi" ? Networking.wifiEnabled && root.wifiDevice && !root.wifiRefreshPending : root.adapter && root.adapter.enabled && !root.adapter.discovering
                     icon: "󰑐"
                     accessibleName: root.displayedSection === "wifi" ? "Scan for Wi-Fi networks" : "Scan for Bluetooth devices"
                     foregroundColor: enabled ? Theme.foreground : Theme.mutedDark
                     onClicked: {
                         if (root.displayedSection === "wifi")
-                            Backend.scanWifi();
+                            root.restartWifiScanner();
                         else
                             root.startBluetoothDiscovery();
                     }
@@ -464,7 +580,7 @@ FocusScope {
                 visible: root.displayedSection === "wifi"
                 clip: true
                 spacing: 4
-                model: Backend.wifiNetworks
+                model: root.wifiNetworks
 
                 WheelHandler {
                     target: null
@@ -475,13 +591,29 @@ FocusScope {
                     required property var modelData
 
                     width: wifiList.width
-                    icon: root.wifiSignalIcon(modelData.signal)
+                    icon: root.wifiSignalIcon(modelData.signalStrength)
                     title: modelData.name
-                    subtitle: (modelData.security === "open" ? "Open network" : modelData.security.toUpperCase()) + "  ·  " + (root.wifiSignalDbm(modelData.signal) === null ? "Signal unknown" : root.wifiSignalDbm(modelData.signal) + " dBm")
+                    subtitle: root.wifiSecurityLabel(modelData.security) + "  ·  " + root.wifiSignalPercent(modelData.signalStrength) + "%"
                     active: modelData.connected
-                    busy: Backend.wifiConnecting === modelData.name
-                    actionText: modelData.connected ? "Disconnect" : (modelData.security !== "open" && !modelData.known ? "Password" : "Connect")
+                    busy: modelData.stateChanging
+                    actionText: modelData.connected ? "Disconnect" : (!modelData.known && root.wifiUsesPsk(modelData.security) ? "Password" : "Connect")
                     onClicked: root.selectWifi(modelData)
+
+                    Connections {
+                        function onConnectionFailed(reason) {
+                            root.wifiConnectionFailed(modelData, reason);
+                        }
+
+                        function onConnectedChanged() {
+                            if (modelData.connected) {
+                                root.wifiError = "";
+                                root.pendingWifiNetwork = null;
+                                wifiPasswordInput.clear();
+                            }
+                        }
+
+                        target: modelData
+                    }
                 }
 
             }
