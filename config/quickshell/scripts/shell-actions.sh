@@ -89,15 +89,39 @@ capture_path() {
   printf '%s/screenshot-%(%Y%m%d-%H%M%S)T.png' "$directory" -1
 }
 
-select_region() {
-  slurp -d -b '#1e232680' -c '#a7c080ff' -s '#a7c08033' -w 2
+publish_capture() {
+  local output=$1
+  wl-copy --type image/png < "$output"
+  printf '%s\n' "$output"
 }
 
-select_window() {
-  hyprctl -j clients \
-    | jq -r '.[] | select(.mapped and .size[0] > 0 and .size[1] > 0) | "\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"' \
-    | sort -u \
-    | slurp -r -b '#00000000' -c '#00000000' -s '#00000000' -B '#00000000' -w 0
+window_candidates() {
+  local monitors
+  monitors=$(hyprctl -j monitors)
+
+  hyprctl -j clients | jq --argjson monitors "$monitors" '
+    [
+      .[]
+      | select(.mapped and (.hidden | not) and .size[0] > 0 and .size[1] > 0)
+      | select(
+          .pinned
+          or (.workspace.id as $workspace
+              | any($monitors[];
+                  .activeWorkspace.id == $workspace
+                  or (.specialWorkspace.id != 0 and .specialWorkspace.id == $workspace)))
+        )
+      | {
+          x: .at[0],
+          y: .at[1],
+          width: .size[0],
+          height: .size[1],
+          title: .title,
+          rounded: (.fullscreen == 0 and .fullscreenClient == 0),
+          focusOrder: .focusHistoryID
+        }
+    ]
+    | sort_by(-.focusOrder)
+  '
 }
 
 case "$action" in
@@ -156,30 +180,32 @@ case "$action" in
     sleep 0.08
     hyprctl eval "hl.dispatch(hl.dsp.send_shortcut({ mods = \"CTRL\", key = \"V\", window = \"address:$target\" }))" >/dev/null
     ;;
+  window-list)
+    window_candidates
+    ;;
   capture)
-    mode=${2:-region}
+    mode=${2:-full}
     output=$(capture_path)
     case "$mode" in
       full)
         grim "$output"
-        ;;
-      window)
-        geometry=$(select_window)
-        [[ -n $geometry ]]
-        grim -g "$geometry" "$output"
-        ;;
-      region)
-        geometry=$(select_region)
-        [[ -n $geometry ]]
-        grim -g "$geometry" "$output"
         ;;
       *)
         printf 'unknown capture mode: %s\n' "$mode" >&2
         exit 2
         ;;
     esac
-    wl-copy < "$output"
-    printf '%s\n' "$output"
+    publish_capture "$output"
+    ;;
+  capture-geometry)
+    x=${2:?x coordinate required}
+    y=${3:?y coordinate required}
+    width=${4:?width required}
+    height=${5:?height required}
+    [[ $x =~ ^-?[0-9]+$ && $y =~ ^-?[0-9]+$ && $width =~ ^[1-9][0-9]*$ && $height =~ ^[1-9][0-9]*$ ]]
+    output=$(capture_path)
+    grim -g "$x,$y ${width}x${height}" "$output"
+    publish_capture "$output"
     ;;
   record-toggle)
     if pid=$(recording_pid); then

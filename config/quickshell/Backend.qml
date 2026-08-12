@@ -20,6 +20,15 @@ Singleton {
     property bool clipboardContentsLoading: false
     property string lastCapture: ""
     property string lastError: ""
+    property var windowCandidates: []
+    property string captureSelectionMode: ""
+    readonly property bool captureSelectionActive: captureSelectionMode.length > 0
+    property bool regionSelectionDragging: false
+    property real regionStartX: 0
+    property real regionStartY: 0
+    property real regionCurrentX: 0
+    property real regionCurrentY: 0
+    property var pendingGeometryCapture: null
 
     function refreshStatus() {
         wifiProcess.running = true;
@@ -84,7 +93,72 @@ Singleton {
 
     function capture(mode) {
         lastError = "";
+        if (mode === "window") {
+            windowCandidatesProcess.exec([helper, "window-list"]);
+            return ;
+        }
+        if (mode === "region") {
+            windowCandidates = [];
+            captureSelectionMode = "region";
+            return ;
+        }
         captureProcess.exec([helper, "capture", mode]);
+    }
+
+    function cancelCaptureSelection() {
+        captureSelectionMode = "";
+        windowCandidates = [];
+        regionSelectionDragging = false;
+    }
+
+    function queueGeometryCapture(geometry) {
+        pendingGeometryCapture = geometry;
+        cancelCaptureSelection();
+        geometryCaptureDelay.restart();
+    }
+
+    function captureWindow(candidate) {
+        queueGeometryCapture(candidate);
+    }
+
+    function beginRegionSelection(x, y) {
+        if (captureSelectionMode !== "region")
+            return ;
+
+        regionStartX = x;
+        regionStartY = y;
+        regionCurrentX = x;
+        regionCurrentY = y;
+        regionSelectionDragging = true;
+    }
+
+    function updateRegionSelection(x, y) {
+        if (!regionSelectionDragging)
+            return ;
+
+        regionCurrentX = x;
+        regionCurrentY = y;
+    }
+
+    function finishRegionSelection(x, y) {
+        if (!regionSelectionDragging)
+            return ;
+
+        updateRegionSelection(x, y);
+        const left = Math.floor(Math.min(regionStartX, regionCurrentX));
+        const top = Math.floor(Math.min(regionStartY, regionCurrentY));
+        const right = Math.ceil(Math.max(regionStartX, regionCurrentX));
+        const bottom = Math.ceil(Math.max(regionStartY, regionCurrentY));
+        if (right - left < 2 || bottom - top < 2) {
+            cancelCaptureSelection();
+            return ;
+        }
+        queueGeometryCapture({
+            "x": left,
+            "y": top,
+            "width": right - left,
+            "height": bottom - top
+        });
     }
 
     function toggleRecording() {
@@ -243,6 +317,50 @@ Singleton {
             }
         }
 
+    }
+
+    Process {
+        id: windowCandidatesProcess
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const candidates = JSON.parse(text);
+                    if (!Array.isArray(candidates) || candidates.length === 0) {
+                        root.lastError = "No windows available to capture";
+                        return ;
+                    }
+                    root.windowCandidates = candidates;
+                    root.captureSelectionMode = "window";
+                } catch (error) {
+                    root.lastError = "Could not load windows for capture";
+                }
+            }
+        }
+
+        stderr: StdioCollector {
+            onStreamFinished: {
+                const output = text.trim();
+                if (output)
+                    root.lastError = output;
+
+            }
+        }
+
+    }
+
+    Timer {
+        id: geometryCaptureDelay
+
+        interval: Theme.animationFast
+        onTriggered: {
+            const geometry = root.pendingGeometryCapture;
+            if (!geometry)
+                return ;
+
+            root.pendingGeometryCapture = null;
+            captureProcess.exec([root.helper, "capture-geometry", String(geometry.x), String(geometry.y), String(geometry.width), String(geometry.height)]);
+        }
     }
 
     Process {

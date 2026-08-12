@@ -14,6 +14,17 @@ ShellRoot {
 
     }
 
+    Variants {
+        model: Quickshell.screens
+
+        CaptureSelector {
+            required property var modelData
+
+            screen: modelData
+        }
+
+    }
+
     IpcHandler {
         function toggle(panel: string) {
             ShellState.show(panel);
