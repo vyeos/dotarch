@@ -33,6 +33,7 @@ for file in \
   alacritty/alacritty.toml \
   fish/config.fish fish/functions/la.fish fish/functions/ll.fish \
   hypr/hyprland.lua \
+  pipewire/pipewire.conf.d/51-alc285-software-volume.conf \
   systemd/user/restore-internal-mic.service \
   wireplumber/wireplumber.conf.d/51-alc285-soft-volume.conf \
   gtk-3.0/gtk.css gtk-3.0/settings.ini \

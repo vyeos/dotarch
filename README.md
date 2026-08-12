@@ -31,7 +31,12 @@ the dotfiles installer clones it automatically.
 The T3 Code desktop entry is retained only as a local reference: it is not
 installed because it points to a version-specific AppImage path.
 
-The dotfiles installer also enables a user service that restores the built-in
+The dotfiles installer creates a persistent PipeWire software-volume sink for
+the laptop speakers. The physical ALC285 sink must remain at 100% because its
+hardware volume affects the main speakers but not the bass-speaker DAC. Volume
+keys control the virtual sink, attenuating both paths equally.
+
+The installer also enables a user service that restores the built-in
 Ryzen/ALC285 microphone to its 0 dB hardware baseline (shown as 10%) and unmutes it whenever the
 audio session starts. The WirePlumber soft-mixer workaround is limited to
 playback so it does not force the microphone's hardware gain to maximum.
