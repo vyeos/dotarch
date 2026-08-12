@@ -23,7 +23,8 @@ Singleton {
     readonly property color aqua: "#83c092"
     readonly property color orange: "#e69875"
     readonly property color purple: "#d699b6"
-    readonly property string fontFamily: "JetBrainsMono Nerd Font"
+    readonly property string fontFamily: "Geist"
+    readonly property string iconFontFamily: "JetBrainsMono Nerd Font"
     readonly property int radiusSmall: 7
     readonly property int radius: 10
     readonly property int animationFast: 140

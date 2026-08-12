@@ -246,6 +246,18 @@ FocusScope {
         return "󰂯";
     }
 
+    function keyboardBacklightLabel(level, maximum) {
+        if (level < 0 || maximum < 1)
+            return "Unavailable";
+        if (level === 0)
+            return "Off";
+        if (level === maximum)
+            return "High";
+        if (level <= maximum / 2)
+            return "Low";
+        return "Medium";
+    }
+
     function wifiSignalPercent(signal) {
         const value = Number(signal);
         if (!Number.isFinite(value))
@@ -341,6 +353,9 @@ FocusScope {
 
     Connections {
         function onPanelChanged() {
+            if (ShellState.panel === "control")
+                Backend.refreshQuickControls();
+
             if (ShellState.panel !== "control") {
                 root.closeDetails();
                 root.stopBluetoothDiscovery();
@@ -423,18 +438,77 @@ FocusScope {
 
         }
 
+        Row {
+            id: systemActions
+
+            width: parent.width
+            height: 58
+            spacing: 7
+
+            ActionTile {
+                id: nightLightTile
+
+                width: (parent.width - 14) / 3
+                icon: "󰖔"
+                title: "Night Light"
+                subtitle: Backend.nightLightStatus === "unavailable" ? "Not installed" : (Backend.nightLightStatus === "on" ? ShellState.nightLightTemperature + " K" : "Off")
+                active: Backend.nightLightStatus === "on"
+                expandable: Backend.nightLightStatus !== "unavailable"
+                expanded: root.expandedSection === "nightlight"
+                detailAccessibleName: "Adjust Night Light temperature"
+                onClicked: Backend.toggleNightLight()
+                onDetailClicked: root.toggleSection("nightlight")
+            }
+
+            ActionTile {
+                width: (parent.width - 14) / 3
+                icon: Backend.powerProfile === "power-saver" ? "󰌪" : (Backend.powerProfile === "performance" ? "󰓅" : "󰾆")
+                title: "Power Profile"
+                subtitle: {
+                    if (Backend.powerProfile === "unavailable")
+                        return "Not installed";
+                    if (Backend.powerProfile === "power-saver")
+                        return "Power saver";
+                    return Backend.powerProfile.charAt(0).toUpperCase() + Backend.powerProfile.slice(1);
+                }
+                active: Backend.powerProfile === "performance"
+                onClicked: Backend.cyclePowerProfile()
+            }
+
+            ActionTile {
+                id: keyboardBacklightTile
+
+                width: (parent.width - 14) / 3
+                icon: "󰌌"
+                title: "Keyboard"
+                subtitle: {
+                    return root.keyboardBacklightLabel(Backend.keyboardBacklightLevel, Backend.keyboardBacklightMaximum);
+                }
+                active: Backend.keyboardBacklightLevel > 0
+                expandable: Backend.keyboardBacklightLevel >= 0
+                expanded: root.expandedSection === "keyboard-backlight"
+                detailAccessibleName: "Adjust keyboard backlight"
+                onClicked: Backend.cycleKeyboardBacklight()
+                onDetailClicked: root.toggleSection("keyboard-backlight")
+            }
+
+        }
+
         Rectangle {
             id: devicePicker
 
             parent: root
             readonly property bool audioMode: root.displayedSection === "audio"
+            readonly property bool nightLightMode: root.displayedSection === "nightlight"
+            readonly property bool keyboardBacklightMode: root.displayedSection === "keyboard-backlight"
+            readonly property bool compactMode: audioMode || nightLightMode || keyboardBacklightMode
             readonly property real availableHeight: root.height - y
 
-            x: audioMode ? audioTile.x + audioTile.width / 2 - width / 2 : 0
-            y: quickActions.y + quickActions.height + content.spacing
+            x: audioMode ? audioTile.x + audioTile.width / 2 - width / 2 : (keyboardBacklightMode ? root.width - width : 0)
+            y: systemActions.y + systemActions.height + content.spacing
             z: 20
-            width: audioMode ? 320 : root.width
-            height: audioMode ? Math.min(176, availableHeight) : availableHeight
+            width: compactMode ? 320 : root.width
+            height: keyboardBacklightMode ? Math.min(142, availableHeight) : (nightLightMode ? Math.min(92, availableHeight) : (audioMode ? Math.min(176, availableHeight) : availableHeight))
             radius: Theme.radius
             color: Theme.bg0
             clip: true
@@ -444,11 +518,15 @@ FocusScope {
 
             Rectangle {
                 anchors.top: parent.top
-                anchors.horizontalCenter: parent.horizontalCenter
+                x: {
+                    const sourceTile = devicePicker.audioMode ? audioTile : (devicePicker.nightLightMode ? nightLightTile : keyboardBacklightTile);
+                    const centeredX = sourceTile.x + sourceTile.width / 2 - devicePicker.x - width / 2;
+                    return Math.max(Theme.radius, Math.min(parent.width - width - Theme.radius, centeredX));
+                }
                 width: 42
                 height: 2
                 radius: 1
-                visible: devicePicker.audioMode
+                visible: devicePicker.compactMode
                 color: Theme.primary
             }
 
@@ -463,14 +541,14 @@ FocusScope {
 
                 Column {
                     anchors.left: parent.left
-                    anchors.right: powerButton.left
-                    anchors.rightMargin: 8
+                    anchors.right: scanButton.visible ? scanButton.left : (powerButton.visible ? powerButton.left : parent.right)
+                    anchors.rightMargin: scanButton.visible || powerButton.visible ? 8 : 0
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 1
 
                     ShellText {
                         width: parent.width
-                        text: root.displayedSection === "wifi" ? "Wi-Fi networks" : (root.displayedSection === "audio" ? "Sound output" : "Bluetooth devices")
+                        text: root.displayedSection === "wifi" ? "Wi-Fi networks" : (root.displayedSection === "audio" ? "Sound output" : (root.displayedSection === "nightlight" ? ShellState.nightLightTemperature + " K" : (root.displayedSection === "keyboard-backlight" ? "Keyboard backlight" : "Bluetooth devices")))
                         font.pixelSize: 10
                         font.weight: Font.Bold
                     }
@@ -484,9 +562,16 @@ FocusScope {
                             if (root.displayedSection === "audio")
                                 return root.audioSinks.length + " available";
 
+                            if (root.displayedSection === "nightlight")
+                                return "";
+
+                            if (root.displayedSection === "keyboard-backlight")
+                                return root.keyboardBacklightLabel(Backend.keyboardBacklightLevel, Backend.keyboardBacklightMaximum) + "  ·  " + Backend.keyboardBacklightLevel + " of " + Backend.keyboardBacklightMaximum;
+
                             return root.adapter && root.adapter.discovering ? "Looking for devices…" : root.bluetoothDevices.length + " available";
                         }
                         color: root.wifiError && root.displayedSection === "wifi" ? Theme.red : Theme.muted
+                        visible: text.length > 0
                         elide: Text.ElideRight
                         font.pixelSize: 8
                     }
@@ -501,6 +586,7 @@ FocusScope {
                     anchors.verticalCenter: parent.verticalCenter
                     width: 25
                     height: 25
+                    visible: root.displayedSection !== "keyboard-backlight"
                     icon: root.displayedSection === "audio" ? (root.sink && root.sink.audio && root.sink.audio.muted ? "󰝟" : "󰕾") : "󰐥"
                     accessibleName: {
                         if (root.displayedSection === "wifi")
@@ -508,6 +594,9 @@ FocusScope {
 
                         if (root.displayedSection === "audio")
                             return root.sink && root.sink.audio && root.sink.audio.muted ? "Unmute audio" : "Mute audio";
+
+                        if (root.displayedSection === "nightlight")
+                            return Backend.nightLightStatus === "on" ? "Turn Night Light off" : "Turn Night Light on";
 
                         return root.adapter && root.adapter.enabled ? "Turn Bluetooth off" : "Turn Bluetooth on";
                     }
@@ -518,6 +607,9 @@ FocusScope {
                         if (root.displayedSection === "audio")
                             return root.sink && root.sink.audio && !root.sink.audio.muted ? Theme.primary : Theme.muted;
 
+                        if (root.displayedSection === "nightlight")
+                            return Backend.nightLightStatus === "on" ? Theme.primary : Theme.muted;
+
                         return root.adapter && root.adapter.enabled ? Theme.primary : Theme.muted;
                     }
                     onClicked: {
@@ -525,6 +617,8 @@ FocusScope {
                             root.toggleWifi();
                         else if (root.displayedSection === "audio" && root.sink && root.sink.audio)
                             root.sink.audio.muted = !root.sink.audio.muted;
+                        else if (root.displayedSection === "nightlight")
+                            Backend.toggleNightLight();
                         else if (root.adapter)
                             root.adapter.enabled = !root.adapter.enabled;
                     }
@@ -547,6 +641,143 @@ FocusScope {
                             root.restartWifiScanner();
                         else
                             root.startBluetoothDiscovery();
+                    }
+                }
+
+            }
+
+            StyledSlider {
+                id: nightLightSlider
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: pickerHeader.bottom
+                anchors.leftMargin: 8
+                anchors.rightMargin: 8
+                anchors.topMargin: 4
+                visible: root.displayedSection === "nightlight"
+                enabled: visible
+                filled: true
+                icon: "󰖔"
+                accessibleName: "Night Light temperature"
+                value: (ShellState.nightLightTemperature - 2500) / 3500
+                onMoved: (value) => Backend.setNightLightTemperature(2500 + value * 3500)
+            }
+
+            StyledSlider {
+                id: keyboardBacklightSlider
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: pickerHeader.bottom
+                anchors.leftMargin: 8
+                anchors.rightMargin: 8
+                anchors.topMargin: 4
+                visible: root.displayedSection === "keyboard-backlight"
+                enabled: visible
+                filled: true
+                levelLabels: ["0", "1", "2", "3"]
+                icon: ""
+                accessibleName: "Keyboard backlight level"
+                stepSize: Backend.keyboardBacklightMaximum > 0 ? 1 / Backend.keyboardBacklightMaximum : 0
+                value: Backend.keyboardBacklightMaximum > 0 ? Backend.keyboardBacklightLevel / Backend.keyboardBacklightMaximum : 0
+                onMoved: (value) => Backend.setKeyboardBacklight(value * Backend.keyboardBacklightMaximum)
+            }
+
+            Rectangle {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: keyboardBacklightSlider.bottom
+                anchors.leftMargin: 8
+                anchors.rightMargin: 8
+                anchors.topMargin: 6
+                height: 34
+                radius: Theme.radiusSmall
+                color: Theme.bg1
+                visible: root.displayedSection === "keyboard-backlight"
+
+                ShellText {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 10
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "󰔛"
+                    color: Theme.mutedDark
+                    font.pixelSize: 11
+                }
+
+                ShellText {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 31
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "Turn off after"
+                    color: Theme.muted
+                    font.pixelSize: 9
+                }
+
+                TextInput {
+                    id: keyboardTimeoutInput
+
+                    anchors.right: timeoutUnit.left
+                    anchors.rightMargin: 7
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 42
+                    horizontalAlignment: Text.AlignRight
+                    text: String(ShellState.keyboardBacklightTimeoutValue)
+                    color: Theme.foreground
+                    selectionColor: Theme.primary
+                    selectedTextColor: Theme.bgDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 10
+                    font.bold: true
+                    selectByMouse: true
+                    activeFocusOnTab: visible
+                    validator: IntValidator {
+                        bottom: 0
+                        top: 3600
+                    }
+                    onEditingFinished: Backend.setKeyboardBacklightTimeout(Number(text || 0), ShellState.keyboardBacklightTimeoutUnit)
+                    Keys.onReturnPressed: focus = false
+                    Keys.onEnterPressed: focus = false
+                }
+
+                FocusScope {
+                    id: timeoutUnit
+
+                    anchors.right: parent.right
+                    anchors.rightMargin: 7
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 42
+                    height: 24
+                    activeFocusOnTab: visible
+                    Keys.onReturnPressed: toggleUnit()
+                    Keys.onEnterPressed: toggleUnit()
+                    Keys.onSpacePressed: toggleUnit()
+
+                    function toggleUnit() {
+                        const unit = ShellState.keyboardBacklightTimeoutUnit === "min" ? "sec" : "min";
+                        Backend.setKeyboardBacklightTimeout(Number(keyboardTimeoutInput.text || 0), unit);
+                    }
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: Theme.radiusSmall
+                        color: Theme.primaryContainer
+                        border.width: parent.activeFocus ? 1 : 0
+                        border.color: Theme.primary
+                    }
+
+                    ShellText {
+                        anchors.centerIn: parent
+                        text: ShellState.keyboardBacklightTimeoutUnit
+                        color: Theme.primary
+                        font.pixelSize: 9
+                        font.weight: Font.Bold
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: parent.toggleUnit()
                     }
                 }
 
@@ -761,6 +992,7 @@ FocusScope {
 
             width: parent.width
             enabled: root.expandedSection === ""
+            filled: true
             icon: root.sink && root.sink.audio && root.sink.audio.muted ? "󰝟" : "󰕾"
             accessibleName: "Volume"
             value: root.sink && root.sink.audio ? root.sink.audio.volume : 0
@@ -777,6 +1009,7 @@ FocusScope {
 
             width: parent.width
             enabled: root.expandedSection === ""
+            filled: true
             icon: "󰃠"
             accessibleName: "Brightness"
             value: Backend.brightness / 100
