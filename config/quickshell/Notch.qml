@@ -340,7 +340,7 @@ PanelWindow {
 
             Behavior on opacity {
                 NumberAnimation {
-                    duration: Theme.animationFast
+                    duration: Theme.animationNormal
                     easing.type: Easing.OutCubic
                 }
 
@@ -350,15 +350,17 @@ PanelWindow {
 
         Behavior on width {
             NumberAnimation {
-                duration: ShellState.expanded ? Theme.animationNormal : Theme.animationFast
+                duration: Theme.animationNormal
                 easing.type: Easing.OutCubic
             }
 
         }
 
         Behavior on height {
+            enabled: !clipboardPanel.previewTransitionActive
+
             NumberAnimation {
-                duration: ShellState.expanded ? Theme.animationNormal : Theme.animationFast
+                duration: Theme.animationNormal
                 easing.type: Easing.OutCubic
             }
 

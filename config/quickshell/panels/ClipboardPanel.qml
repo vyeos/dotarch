@@ -8,6 +8,7 @@ FocusScope {
 
     property int selectedIndex: 0
     property bool previewVisible: false
+    property bool previewTransitionActive: false
     property string previewItemId: ""
 
     function takeInitialFocus() {
@@ -30,6 +31,8 @@ FocusScope {
         if (!item)
             return ;
 
+        previewTransitionActive = true;
+        previewTransitionTimer.restart();
         if (previewVisible && previewItemId === item.id) {
             previewVisible = false;
             return ;
@@ -50,6 +53,13 @@ FocusScope {
 
     implicitWidth: 337
     implicitHeight: content.implicitHeight
+
+    Timer {
+        id: previewTransitionTimer
+
+        interval: Theme.animationFast
+        onTriggered: root.previewTransitionActive = false
+    }
 
     Column {
         id: content
