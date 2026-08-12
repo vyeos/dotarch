@@ -89,6 +89,17 @@ capture_path() {
   printf '%s/screenshot-%(%Y%m%d-%H%M%S)T.png' "$directory" -1
 }
 
+select_region() {
+  slurp -d -b '#1e232680' -c '#a7c080ff' -s '#a7c08033' -w 2
+}
+
+select_window() {
+  hyprctl -j clients \
+    | jq -r '.[] | select(.mapped and .size[0] > 0 and .size[1] > 0) | "\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"' \
+    | sort -u \
+    | slurp -r -b '#00000000' -c '#00000000' -s '#00000000' -B '#00000000' -w 0
+}
+
 case "$action" in
   wifi-status)
     wifi_status
@@ -153,11 +164,12 @@ case "$action" in
         grim "$output"
         ;;
       window)
-        geometry=$(hyprctl -j activewindow | jq -r '"\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"')
+        geometry=$(select_window)
+        [[ -n $geometry ]]
         grim -g "$geometry" "$output"
         ;;
       region)
-        geometry=$(slurp)
+        geometry=$(select_region)
         [[ -n $geometry ]]
         grim -g "$geometry" "$output"
         ;;

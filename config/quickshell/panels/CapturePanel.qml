@@ -20,7 +20,7 @@ FocusScope {
     Timer {
         id: captureDelay
 
-        interval: 260
+        interval: Theme.animationNormal + 100
         onTriggered: Backend.capture(root.mode)
     }
 

@@ -41,6 +41,7 @@ alias ls 'eza --icons --color=always'
 alias la 'eza -a --icons --color=always'
 alias ll 'eza -a -l --icons --color=always'
 alias oc opencode
+alias lg lazygit
 alias fcf 'nvim ~/.config/fish/config.fish'
 alias sf 'source ~/.config/fish/config.fish'
 
