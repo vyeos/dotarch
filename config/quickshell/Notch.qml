@@ -17,7 +17,7 @@ PanelWindow {
     readonly property int requestedTopPadding: ShellState.panel === "launcher" ? 10 : contentPadding
     readonly property int requestedBottomPadding: ShellState.panel === "launcher" ? 4 : contentPadding
     readonly property int displayedTopPadding: displayedPanel === "launcher" ? 10 : contentPadding
-    readonly property int displayedBottomPadding: displayedPanel === "launcher" ? 4 : displayedPanel === "control" && controlPanel.edgeToEdgeDetail ? 0 : contentPadding
+    readonly property int displayedBottomPadding: displayedPanel === "launcher" ? 4 : contentPadding
     readonly property real targetVisualWidth: ShellState.targetWidth + cornerWing * 2
     readonly property real targetVisualHeight: ShellState.expanded ? panelContentHeight + requestedTopPadding + requestedBottomPadding : collapsedHeight
     readonly property real panelContentHeight: ShellState.expanded ? Math.max(ShellState.panelHeights[ShellState.panel] || 0, requestedPanel ? requestedPanel.implicitHeight : 0) : 0

@@ -51,7 +51,6 @@ FocusScope {
     property string wifiError: ""
     property bool wifiRefreshPending: false
     readonly property bool audioPopoverOpen: expandedSection === "audio"
-    readonly property bool edgeToEdgeDetail: displayedSection === "wifi"
     readonly property real detailScrollFactor: 2
 
     function toggleSection(section) {
@@ -734,6 +733,7 @@ FocusScope {
                 anchors.bottom: parent.bottom
                 anchors.margins: 7
                 anchors.topMargin: 5
+                anchors.bottomMargin: 0
                 visible: root.displayedSection === "bluetooth"
                 clip: true
                 spacing: 4
