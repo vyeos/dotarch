@@ -10,7 +10,7 @@ PanelWindow {
     id: window
 
     readonly property int contentPadding: 14
-    readonly property int collapsedHeight: 40
+    readonly property int collapsedHeight: 36
     readonly property int cornerWing: 16
     readonly property int canvasWidth: 552
     readonly property int canvasHeight: 600
@@ -20,7 +20,7 @@ PanelWindow {
     readonly property real targetVisualHeight: ShellState.expanded ? panelContentHeight + contentPadding + requestedBottomPadding : collapsedHeight
     readonly property real panelContentHeight: ShellState.expanded ? Math.max(ShellState.panelHeights[ShellState.panel] || 0, requestedPanel ? requestedPanel.implicitHeight : 0) : 0
     readonly property real batteryLevel: UPower.displayDevice ? UPower.displayDevice.percentage : 0
-    readonly property bool batteryCharging: UPower.displayDevice && (UPower.displayDevice.state === UPowerDeviceState.Charging || UPower.displayDevice.state === UPowerDeviceState.PendingCharge)
+    readonly property bool batteryCharging: UPower.displayDevice && (!UPower.onBattery || UPower.displayDevice.state === UPowerDeviceState.Charging || UPower.displayDevice.state === UPowerDeviceState.PendingCharge)
     property bool contentRevealed: false
     property bool clockRevealed: true
     property string displayedPanel: "control"
@@ -237,7 +237,7 @@ PanelWindow {
                 width: parent.width / 3
                 height: parent.height
                 verticalAlignment: Text.AlignVCenter
-                text: "󰁹 " + (window.batteryCharging ? " " : "") + Math.round(window.batteryLevel * 100) + "%"
+                text: (window.batteryCharging ? "" : "󰁹") + " " + Math.round(window.batteryLevel * 100) + "%"
                 color: window.batteryLevel < 0.2 ? Theme.red : Theme.green
                 font.pixelSize: 11
             }
@@ -350,7 +350,7 @@ PanelWindow {
 
         Behavior on width {
             NumberAnimation {
-                duration: Theme.animationNormal
+                duration: ShellState.expanded ? Theme.animationNormal : Theme.animationFast
                 easing.type: Easing.OutCubic
             }
 
@@ -358,7 +358,7 @@ PanelWindow {
 
         Behavior on height {
             NumberAnimation {
-                duration: Theme.animationNormal
+                duration: ShellState.expanded ? Theme.animationNormal : Theme.animationFast
                 easing.type: Easing.OutCubic
             }
 

@@ -62,9 +62,17 @@ case "$action" in
   clipboard-list)
     cliphist list | head -n 50
     ;;
-  clipboard-copy)
+  clipboard-decode)
     [[ ${2:-} =~ ^[0-9]+$ ]]
+    cliphist decode "$2"
+    ;;
+  clipboard-paste)
+    [[ ${2:-} =~ ^[0-9]+$ ]]
+    target=$(hyprctl activewindow -j | jq -r '.address // empty')
+    [[ $target =~ ^0x[0-9a-fA-F]+$ ]]
     cliphist decode "$2" | wl-copy
+    sleep 0.08
+    hyprctl eval "hl.dispatch(hl.dsp.send_shortcut({ mods = \"CTRL\", key = \"V\", window = \"address:$target\" }))" >/dev/null
     ;;
   capture)
     mode=${2:-region}

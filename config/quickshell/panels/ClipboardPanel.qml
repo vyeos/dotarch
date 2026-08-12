@@ -7,17 +7,44 @@ FocusScope {
     id: root
 
     property int selectedIndex: 0
+    property bool previewVisible: false
+    property string previewItemId: ""
 
     function takeInitialFocus() {
+        selectedIndex = 0;
+        previewVisible = false;
+        previewItemId = "";
         Backend.refreshClipboard();
         searchInput.forceActiveFocus(Qt.TabFocusReason);
     }
 
-    function activateSelection() {
+    function selectedItem() {
         if (filteredItems.values.length === 0)
+            return null;
+
+        return filteredItems.values[Math.min(selectedIndex, filteredItems.values.length - 1)];
+    }
+
+    function togglePreview() {
+        const item = selectedItem();
+        if (!item)
             return ;
 
-        Backend.copyClipboard(filteredItems.values[Math.min(selectedIndex, filteredItems.values.length - 1)].id);
+        if (previewVisible && previewItemId === item.id) {
+            previewVisible = false;
+            return ;
+        }
+        previewItemId = item.id;
+        previewVisible = true;
+        Backend.loadClipboardContents(item.id, item.preview);
+    }
+
+    function activateSelection() {
+        const item = selectedItem();
+        if (!item)
+            return ;
+
+        Backend.pasteClipboard(item.id);
         ShellState.close();
     }
 
@@ -69,6 +96,7 @@ FocusScope {
                 Keys.onUpPressed: root.selectedIndex = Math.max(0, root.selectedIndex - 1)
                 Keys.onReturnPressed: root.activateSelection()
                 Keys.onEnterPressed: root.activateSelection()
+                Keys.onSpacePressed: root.togglePreview()
                 Keys.onEscapePressed: ShellState.close()
 
                 ShellText {
@@ -134,7 +162,7 @@ FocusScope {
                     anchors.right: parent.right
                     anchors.rightMargin: 9
                     anchors.verticalCenter: parent.verticalCenter
-                    text: index === root.selectedIndex ? "↵ paste" : ""
+                    text: index === root.selectedIndex ? "↵ paste  ·  space view" : ""
                     color: Theme.muted
                     font.pixelSize: 8
                 }
@@ -145,6 +173,76 @@ FocusScope {
                     cursorShape: Qt.PointingHandCursor
                     onEntered: root.selectedIndex = index
                     onClicked: root.activateSelection()
+                }
+
+            }
+
+        }
+
+        Rectangle {
+            width: parent.width
+            height: root.previewVisible ? 156 : 0
+            radius: Theme.radiusSmall
+            color: Theme.bg0
+            border.width: 1
+            border.color: Theme.bg2
+            clip: true
+            visible: height > 0
+
+            ShellText {
+                id: previewLabel
+
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.leftMargin: 11
+                anchors.topMargin: 9
+                text: "Full content"
+                color: Theme.green
+                font.pixelSize: 9
+                font.weight: Font.Bold
+            }
+
+            ShellText {
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.rightMargin: 11
+                anchors.topMargin: 9
+                text: "space close"
+                color: Theme.mutedDark
+                font.pixelSize: 8
+            }
+
+            Flickable {
+                id: previewViewport
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: previewLabel.bottom
+                anchors.bottom: parent.bottom
+                anchors.margins: 11
+                anchors.topMargin: 8
+                contentWidth: width
+                contentHeight: Math.max(height, previewText.implicitHeight)
+                boundsBehavior: Flickable.StopAtBounds
+                clip: true
+
+                ShellText {
+                    id: previewText
+
+                    width: previewViewport.width
+                    text: Backend.clipboardContentsLoading ? "Loading…" : Backend.clipboardContents
+                    textFormat: Text.PlainText
+                    wrapMode: Text.Wrap
+                    color: Backend.clipboardContentsLoading ? Theme.muted : Theme.foreground
+                    font.pixelSize: 10
+                }
+
+            }
+
+            Behavior on height {
+                NumberAnimation {
+                    duration: Theme.animationFast
+                    easing.type: Easing.OutCubic
                 }
 
             }

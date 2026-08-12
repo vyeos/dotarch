@@ -12,6 +12,8 @@ Singleton {
     property int brightness: 0
     property bool recording: false
     property var clipboardItems: []
+    property string clipboardContents: ""
+    property bool clipboardContentsLoading: false
     property string lastCapture: ""
 
     function refresh() {
@@ -33,8 +35,19 @@ Singleton {
         clipboardProcess.running = true;
     }
 
-    function copyClipboard(id) {
-        actionProcess.exec([helper, "clipboard-copy", String(id)]);
+    function pasteClipboard(id) {
+        actionProcess.exec([helper, "clipboard-paste", String(id)]);
+    }
+
+    function loadClipboardContents(id, itemPreview) {
+        if (itemPreview.startsWith("[[ binary data")) {
+            clipboardContents = itemPreview;
+            clipboardContentsLoading = false;
+            return ;
+        }
+        clipboardContents = "";
+        clipboardContentsLoading = true;
+        clipboardContentsProcess.exec([helper, "clipboard-decode", String(id)]);
     }
 
     function capture(mode) {
@@ -111,6 +124,17 @@ Singleton {
                 else if (output)
                     root.lastCapture = output;
             }
+        }
+
+    }
+
+    Process {
+        id: clipboardContentsProcess
+
+        onExited: root.clipboardContentsLoading = false
+
+        stdout: StdioCollector {
+            onStreamFinished: root.clipboardContents = text
         }
 
     }
