@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import Quickshell.Io
 pragma Singleton
 
 Singleton {
@@ -24,8 +25,28 @@ Singleton {
     property string panel: "clock"
     readonly property bool expanded: panel !== "clock"
     readonly property int targetWidth: expanded ? panelWidths[panel] : 170
-    property alias todos: persistence.todos
+    property var todos: []
     property alias nightLightTemperature: persistence.nightLightTemperature
+
+    function loadTodos() {
+        try {
+            const saved = JSON.parse(todoFile.text());
+            if (!Array.isArray(saved))
+                return ;
+
+            todos = saved.filter((todo) => todo && typeof todo.text === "string").map((todo) => ({
+                "text": todo.text,
+                "done": todo.done === true
+            }));
+        } catch (error) {
+            console.warn("Unable to load todos.json:", error);
+        }
+    }
+
+    function saveTodos(next) {
+        todos = next;
+        todoFile.setText(JSON.stringify(next, null, 2) + "\n");
+    }
 
     function setPanel(name) {
         if (panel === "todo" || name === "todo")
@@ -61,7 +82,7 @@ Singleton {
             "text": clean,
             "done": false
         });
-        todos = next;
+        saveTodos(next);
     }
 
     function toggleTodo(index) {
@@ -70,17 +91,32 @@ Singleton {
             "text": next[index].text,
             "done": !next[index].done
         };
-        todos = next;
+        saveTodos(next);
     }
 
     function clearCompletedTodos() {
-        todos = todos.filter((todo) => !todo.done);
+        const next = todos.filter((todo) => !todo.done);
+        if (next.length !== todos.length)
+            saveTodos(next);
+    }
+
+    FileView {
+        id: todoFile
+
+        path: Quickshell.shellPath("todos.json")
+        preload: true
+        atomicWrites: true
+        watchChanges: false
+        onLoaded: root.loadTodos()
+        onLoadFailed: (error) => {
+            if (error === FileViewError.FileNotFound)
+                todoFile.setText("[]\n");
+        }
     }
 
     PersistentProperties {
         id: persistence
 
-        property var todos: []
         property int nightLightTemperature: 4500
 
         reloadableId: "everforest-notch-state"
