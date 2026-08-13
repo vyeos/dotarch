@@ -78,8 +78,8 @@ FocusScope {
                     anchors.fill: parent
                     anchors.margins: 4
                     radius: Theme.radius
-                    color: themeRow.activeFocus ? modelData.colors.bg1 : modelData.colors.bg0
-                    border.width: modelData.slug === Theme.slug ? 2 : 0
+                    color: modelData.colors.bg0
+                    border.width: themeRow.activeFocus ? 2 : 0
                     border.color: Theme.primary
                 }
 
