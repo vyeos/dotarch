@@ -95,7 +95,7 @@ FocusScope {
 
                     Rectangle {
                         anchors.fill: parent
-                        radius: 10
+                        radius: Theme.radius
                         color: root.pendingAction === modelData.key ? Theme.yellow : (actionButton.highlighted ? Theme.primary : Theme.bg1)
                         border.width: parent.activeFocus ? 2 : 0
                         border.color: Theme.primary

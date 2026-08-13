@@ -137,7 +137,7 @@ PanelWindow {
             y: -15
             width: parent.width - window.cornerWing * 2
             height: parent.height + 15
-            radius: 15
+            radius: Theme.radius
             color: Theme.bgDim
         }
 
@@ -411,8 +411,8 @@ PanelWindow {
         item: notchBody
         topLeftRadius: 0
         topRightRadius: 0
-        bottomLeftRadius: 15
-        bottomRightRadius: 15
+        bottomLeftRadius: Theme.radius
+        bottomRightRadius: Theme.radius
     }
 
 }

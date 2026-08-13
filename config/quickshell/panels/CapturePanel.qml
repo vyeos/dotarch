@@ -236,7 +236,7 @@ FocusScope {
 
                             Rectangle {
                                 anchors.fill: parent
-                                radius: 5
+                                radius: Theme.radiusSmall
                                 color: targetButton.selected ? Theme.primaryContainer : (targetPointer.containsMouse ? Theme.bg1 : "transparent")
                                 border.width: targetButton.activeFocus ? 1 : 0
                                 border.color: root.accent
@@ -323,7 +323,7 @@ FocusScope {
 
                             Rectangle {
                                 anchors.fill: parent
-                                radius: 5
+                                radius: Theme.radiusSmall
                                 color: recordPointer.containsMouse ? Theme.bg1 : "transparent"
                                 border.width: recordControl.activeFocus ? 1 : 0
                                 border.color: Theme.red
@@ -588,7 +588,7 @@ FocusScope {
                     anchors.verticalCenter: parent.verticalCenter
                     width: 30
                     height: 22
-                    radius: 5
+                    radius: Theme.radiusSmall
                     color: Theme.bg1
                     border.width: 1
                     border.color: Theme.bg2
