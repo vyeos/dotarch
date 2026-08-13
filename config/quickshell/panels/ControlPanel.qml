@@ -6,6 +6,7 @@ import Quickshell.Networking
 import Quickshell.Services.Mpris
 import Quickshell.Services.Pipewire
 import Quickshell.Services.SystemTray
+import Quickshell.Services.UPower
 import Quickshell.Widgets
 import qs
 import qs.components
@@ -45,6 +46,8 @@ FocusScope {
     readonly property var connectedDevices: adapter ? adapter.devices.values.filter((device) => {
         return device.connected;
     }) : []
+    readonly property real batteryLevel: UPower.displayDevice ? UPower.displayDevice.percentage : 0
+    readonly property bool batteryCharging: UPower.displayDevice && (!UPower.onBattery || UPower.displayDevice.state === UPowerDeviceState.Charging || UPower.displayDevice.state === UPowerDeviceState.PendingCharge)
     property string expandedSection: ""
     property string displayedSection: ""
     property var pendingWifiNetwork: null
@@ -450,16 +453,16 @@ FocusScope {
 
             ActionTile {
                 width: (parent.width - 7) / 2
-                icon: Backend.powerProfile === "power-saver" ? "󰌪" : (Backend.powerProfile === "performance" ? "󰓅" : "󰾆")
-                title: "Power Profile"
+                icon: root.batteryCharging ? "" : "󰁹"
+                title: "Power & Battery"
                 subtitle: {
+                    const battery = Math.round(root.batteryLevel * 100) + "%" + (root.batteryCharging ? " charging" : "");
                     if (Backend.powerProfile === "unavailable")
-                        return "Not installed";
-                    if (Backend.powerProfile === "power-saver")
-                        return "Power saver";
-                    return Backend.powerProfile.charAt(0).toUpperCase() + Backend.powerProfile.slice(1);
+                        return battery;
+                    const profile = Backend.powerProfile === "power-saver" ? "Power saver" : Backend.powerProfile.charAt(0).toUpperCase() + Backend.powerProfile.slice(1);
+                    return battery + "  ·  " + profile;
                 }
-                active: Backend.powerProfile === "performance"
+                active: root.batteryCharging || Backend.powerProfile === "performance"
                 onClicked: Backend.cyclePowerProfile()
             }
 

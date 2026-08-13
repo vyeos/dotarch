@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Shapes
 import Quickshell
 import Quickshell.Hyprland
-import Quickshell.Services.UPower
 import qs.components
 import qs.panels
 
@@ -10,7 +9,7 @@ PanelWindow {
     id: window
 
     readonly property int contentPadding: 14
-    readonly property int collapsedHeight: 36
+    readonly property int collapsedHeight: 32
     readonly property int cornerWing: 16
     readonly property int canvasWidth: 552
     readonly property int canvasHeight: 600
@@ -21,8 +20,6 @@ PanelWindow {
     readonly property real targetVisualWidth: ShellState.targetWidth + cornerWing * 2
     readonly property real targetVisualHeight: ShellState.expanded ? panelContentHeight + requestedTopPadding + requestedBottomPadding : collapsedHeight
     readonly property real panelContentHeight: ShellState.expanded ? Math.max(ShellState.panelHeights[ShellState.panel] || 0, requestedPanel ? requestedPanel.implicitHeight : 0) : 0
-    readonly property real batteryLevel: UPower.displayDevice ? UPower.displayDevice.percentage : 0
-    readonly property bool batteryCharging: UPower.displayDevice && (!UPower.onBattery || UPower.displayDevice.state === UPowerDeviceState.Charging || UPower.displayDevice.state === UPowerDeviceState.PendingCharge)
     property bool contentRevealed: false
     property bool clockRevealed: true
     property string displayedPanel: "control"
@@ -232,82 +229,27 @@ PanelWindow {
             visible: opacity > 0
             opacity: window.clockRevealed ? 1 : 0
 
-            Item {
-                width: parent.width / 3
-                height: parent.height
-
-                ShellText {
-                    anchors.fill: parent
-                    visible: !Backend.recording
-                    horizontalAlignment: Text.AlignRight
-                    verticalAlignment: Text.AlignVCenter
-                    rightPadding: 8
-                    text: (window.batteryCharging ? "" : "󰁹") + " " + Math.round(window.batteryLevel * 100) + "%"
-                    color: window.batteryLevel < 0.2 ? Theme.red : Theme.primary
-                    font.pixelSize: 11
-                }
-
-                Row {
-                    anchors.left: parent.left
-                    anchors.verticalCenter: parent.verticalCenter
-                    visible: Backend.recording
-                    spacing: 6
-
-                    Rectangle {
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 7
-                        height: 7
-                        radius: 4
-                        color: Theme.red
-
-                        SequentialAnimation on opacity {
-                            running: Backend.recording
-                            loops: Animation.Infinite
-
-                            NumberAnimation {
-                                from: 1
-                                to: 0.35
-                                duration: 700
-                                easing.type: Easing.InOutSine
-                            }
-
-                            NumberAnimation {
-                                from: 0.35
-                                to: 1
-                                duration: 700
-                                easing.type: Easing.InOutSine
-                            }
-                        }
-                    }
-
-                    ShellText {
-                        text: "REC"
-                        color: Theme.red
-                        font.pixelSize: 10
-                        font.weight: Font.Bold
-                    }
-                }
-            }
-
             ShellText {
-                width: parent.width / 3
+                width: parent.width / 2
                 height: parent.height
-                horizontalAlignment: Text.AlignHCenter
+                horizontalAlignment: Text.AlignRight
                 verticalAlignment: Text.AlignVCenter
+                rightPadding: 6
                 text: Qt.formatDateTime(clock.date, "HH:mm")
-                font.pixelSize: 13
-                font.weight: Font.Bold
+                color: "#ffffff"
+                font.pixelSize: 12
+                font.weight: Font.DemiBold
             }
 
             ShellText {
-                width: parent.width / 3
+                width: parent.width / 2
                 height: parent.height
                 horizontalAlignment: Text.AlignLeft
                 verticalAlignment: Text.AlignVCenter
-                leftPadding: 8
+                leftPadding: 6
                 text: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"][clock.date.getDay()] + " " + Qt.formatDateTime(clock.date, "d/M")
-                color: Theme.foreground
-                font.pixelSize: 11
+                color: "#ffffff"
+                font.pixelSize: 12
                 font.weight: Font.DemiBold
             }
 

@@ -122,7 +122,8 @@ hl.env("HYPRCURSOR_SIZE", "24")
 hl.config({
   general = {
     gaps_in          = 5,
-    gaps_out         = 5,
+    -- Leave room above tiled windows for the 32 px Quickshell notch.
+    gaps_out         = { top = 37, right = 5, bottom = 5, left = 5 },
 
     border_size      = 2,
 
