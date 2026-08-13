@@ -300,8 +300,9 @@ PanelWindow {
             ShellText {
                 width: parent.width / 3
                 height: parent.height
-                horizontalAlignment: Text.AlignRight
+                horizontalAlignment: Text.AlignLeft
                 verticalAlignment: Text.AlignVCenter
+                leftPadding: 8
                 text: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"][clock.date.getDay()] + " " + Qt.formatDateTime(clock.date, "d/M")
                 color: Theme.foreground
                 font.pixelSize: 11
