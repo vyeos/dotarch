@@ -1,0 +1,15 @@
+{
+  "name": "Catppuccin Mocha",
+  "slug": "catppuccin-mocha",
+  "appearance": "dark",
+  "colors": {
+    "bg_dim": "#11111b", "bg0": "#1e1e2e", "bg1": "#181825",
+    "bg2": "#313244", "bg3": "#45475a", "bg4": "#585b70",
+    "primary_container": "#313244", "secondary_container": "#45475a",
+    "foreground": "#cdd6f4", "muted": "#a6adc8", "muted_dark": "#6c7086",
+    "red": "#f38ba8", "yellow": "#f9e2af", "green": "#a6e3a1",
+    "primary": "#cba6f7", "blue": "#89b4fa", "aqua": "#94e2d5",
+    "orange": "#fab387", "purple": "#cba6f7"
+  },
+  "applications": { "neovim": "catppuccin", "folder_color": "violet" }
+}

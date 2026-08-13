@@ -68,6 +68,16 @@ ShellRoot {
     }
 
     IpcHandler {
+        function reload() {
+            Theme.reload();
+            AppearanceState.refreshThemes();
+            AppearanceState.refreshWallpapers();
+        }
+
+        target: "theme"
+    }
+
+    IpcHandler {
         function screenshot(mode: string) {
             if (!["full", "window", "region"].includes(mode))
                 return;

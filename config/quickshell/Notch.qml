@@ -30,6 +30,8 @@ PanelWindow {
             "clipboard": clipboardPanel,
             "todo": todoPanel,
             "notes": quickNotesPanel,
+            "theme": themePanel,
+            "wallpaper": wallpaperPanel,
             "capture": capturePanel,
             "power": powerPanel
         };
@@ -42,6 +44,8 @@ PanelWindow {
             "clipboard": clipboardPanel,
             "todo": todoPanel,
             "notes": quickNotesPanel,
+            "theme": themePanel,
+            "wallpaper": wallpaperPanel,
             "capture": capturePanel,
             "power": powerPanel
         };
@@ -138,7 +142,7 @@ PanelWindow {
             width: parent.width - window.cornerWing * 2
             height: parent.height + 15
             radius: Theme.radius
-            color: Theme.bgDim
+            color: Theme.shellBackground
         }
 
         Shape {
@@ -153,7 +157,7 @@ PanelWindow {
                 readonly property real size: window.cornerWing
 
                 strokeWidth: 0
-                fillColor: Theme.bgDim
+                fillColor: Theme.shellBackground
                 startX: 0
                 startY: 0
 
@@ -192,7 +196,7 @@ PanelWindow {
                 readonly property real size: window.cornerWing
 
                 strokeWidth: 0
-                fillColor: Theme.bgDim
+                fillColor: Theme.shellBackground
                 startX: rightShoulderPath.size
                 startY: 0
 
@@ -236,7 +240,7 @@ PanelWindow {
                 verticalAlignment: Text.AlignVCenter
                 rightPadding: 6
                 text: Qt.formatDateTime(clock.date, "HH:mm")
-                color: "#ffffff"
+                color: Theme.shellForeground
                 font.pixelSize: 12
                 font.weight: Font.DemiBold
             }
@@ -248,7 +252,7 @@ PanelWindow {
                 verticalAlignment: Text.AlignVCenter
                 leftPadding: 6
                 text: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"][clock.date.getDay()] + " " + Qt.formatDateTime(clock.date, "d/M")
-                color: "#ffffff"
+                color: Theme.shellForeground
                 font.pixelSize: 12
                 font.weight: Font.DemiBold
             }
@@ -321,6 +325,22 @@ PanelWindow {
                 width: parent.width
                 height: parent.height
                 visible: window.displayedPanel === "notes"
+            }
+
+            ThemePanel {
+                id: themePanel
+
+                width: parent.width
+                height: parent.height
+                visible: window.displayedPanel === "theme"
+            }
+
+            WallpaperPanel {
+                id: wallpaperPanel
+
+                width: parent.width
+                height: parent.height
+                visible: window.displayedPanel === "wallpaper"
             }
 
             CapturePanel {

@@ -1,0 +1,15 @@
+{
+  "name": "Tokyo Night",
+  "slug": "tokyo-night",
+  "appearance": "dark",
+  "colors": {
+    "bg_dim": "#16161e", "bg0": "#1a1b26", "bg1": "#1f2335",
+    "bg2": "#292e42", "bg3": "#3b4261", "bg4": "#545c7e",
+    "primary_container": "#283457", "secondary_container": "#3b4261",
+    "foreground": "#c0caf5", "muted": "#a9b1d6", "muted_dark": "#565f89",
+    "red": "#f7768e", "yellow": "#e0af68", "green": "#9ece6a",
+    "primary": "#7aa2f7", "blue": "#7aa2f7", "aqua": "#7dcfff",
+    "orange": "#ff9e64", "purple": "#bb9af7"
+  },
+  "applications": { "neovim": "tokyonight", "folder_color": "blue" }
+}

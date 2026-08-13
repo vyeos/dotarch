@@ -87,7 +87,7 @@ PanelWindow {
                 width: rightEdge - leftEdge
                 height: bottomEdge - topEdge
                 radius: modelData.rounded ? Theme.radius : 0
-                color: pointer.containsMouse ? "#26a7c080" : "transparent"
+                color: pointer.containsMouse ? Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.15) : "transparent"
                 border.width: pointer.containsMouse ? 3 : 1
                 border.color: pointer.containsMouse ? Theme.primary : Theme.mutedDark
 
@@ -124,7 +124,7 @@ PanelWindow {
             height: Math.max(0, bottomEdge - topEdge)
             visible: Backend.captureSelectionMode === "region" && Backend.regionSelectionDragging && width > 0 && height > 0
             radius: 2
-            color: "#26a7c080"
+            color: Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.15)
             border.width: 2
             border.color: Theme.primary
         }

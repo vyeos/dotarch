@@ -14,7 +14,14 @@ return {
   {
     "LazyVim/LazyVim",
     opts = {
-      colorscheme = "everforest",
+      colorscheme = function()
+        local generated = vim.fn.expand("~/.cache/vyeos/theme/nvim.lua")
+        if vim.uv.fs_stat(generated) then
+          dofile(generated)
+        else
+          vim.cmd.colorscheme("everforest")
+        end
+      end,
     },
   },
 }

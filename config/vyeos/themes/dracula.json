@@ -1,0 +1,15 @@
+{
+  "name": "Dracula",
+  "slug": "dracula",
+  "appearance": "dark",
+  "colors": {
+    "bg_dim": "#191a21", "bg0": "#282a36", "bg1": "#2f3241",
+    "bg2": "#383a4a", "bg3": "#44475a", "bg4": "#6272a4",
+    "primary_container": "#44475a", "secondary_container": "#383a4a",
+    "foreground": "#f8f8f2", "muted": "#bfbfbf", "muted_dark": "#6272a4",
+    "red": "#ff5555", "yellow": "#f1fa8c", "green": "#50fa7b",
+    "primary": "#bd93f9", "blue": "#8be9fd", "aqua": "#8be9fd",
+    "orange": "#ffb86c", "purple": "#ff79c6"
+  },
+  "applications": { "neovim": "dracula", "folder_color": "violet" }
+}

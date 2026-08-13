@@ -43,7 +43,18 @@ done
 
 link_file "$repo_root/config/nvim" "$HOME/.config/nvim"
 link_file "$repo_root/config/quickshell" "$HOME/.config/quickshell"
+link_file "$repo_root/config/vyeos" "$HOME/.config/vyeos"
 touch "$HOME/.config/quickshell/.qmlls.ini"
+
+mkdir -p "$HOME/.local/bin"
+link_file "$repo_root/scripts/theme-switch" "$HOME/.local/bin/theme-switch"
+link_file "$repo_root/scripts/wallpaper-set" "$HOME/.local/bin/wallpaper-set"
+
+for theme in everforest catppuccin-mocha gruvbox-dark nord tokyo-night rose-pine dracula; do
+  mkdir -p "${XDG_PICTURES_DIR:-$HOME/Pictures}/Wallpapers/$theme"
+done
+
+"$HOME/.config/quickshell/scripts/theme-system.sh" generate
 
 systemctl --user daemon-reload
 systemctl --user enable --now restore-internal-mic.service

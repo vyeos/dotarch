@@ -1,6 +1,6 @@
 [general]
 import = [
-    "~/.config/alacritty/themes/themes/everforest_dark_medium.toml"
+    "~/.cache/vyeos/theme/alacritty.toml"
 ]
 
 [env]

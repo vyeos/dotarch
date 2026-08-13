@@ -1,0 +1,27 @@
+{
+  "name": "Everforest",
+  "slug": "everforest",
+  "appearance": "dark",
+  "colors": {
+    "bg_dim": "#232a2e",
+    "bg0": "#2d353b",
+    "bg1": "#343f44",
+    "bg2": "#3d484d",
+    "bg3": "#475258",
+    "bg4": "#4f585e",
+    "primary_container": "#3c4841",
+    "secondary_container": "#45443c",
+    "foreground": "#d3c6aa",
+    "muted": "#9da9a0",
+    "muted_dark": "#7a8478",
+    "red": "#e67e80",
+    "yellow": "#dbbc7f",
+    "green": "#a7c080",
+    "primary": "#a7c080",
+    "blue": "#7fbbb3",
+    "aqua": "#83c092",
+    "orange": "#e69875",
+    "purple": "#d699b6"
+  },
+  "applications": { "neovim": "everforest", "folder_color": "green" }
+}

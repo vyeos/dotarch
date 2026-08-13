@@ -1,45 +1,19 @@
-/* Everforest (dark, medium) — https://everforest.vercel.app/palette */
-@define-color accent_color #a7c080;
-@define-color accent_bg_color #a7c080;
-@define-color accent_fg_color #2d353b;
-@define-color destructive_color #e67e80;
-@define-color destructive_bg_color #e67e80;
-@define-color destructive_fg_color #2d353b;
-@define-color success_color #a7c080;
-@define-color warning_color #dbbc7f;
-@define-color error_color #e67e80;
-
-@define-color window_bg_color #2d353b;
-@define-color window_fg_color #d3c6aa;
-@define-color view_bg_color #2d353b;
-@define-color view_fg_color #d3c6aa;
-@define-color headerbar_bg_color #343f44;
-@define-color headerbar_fg_color #d3c6aa;
-@define-color headerbar_border_color #3d484d;
-@define-color border_color #3d484d;
-@define-color popover_bg_color #343f44;
-@define-color popover_fg_color #d3c6aa;
-@define-color tooltip_bg_color #475258;
-@define-color tooltip_fg_color #d3c6aa;
-@define-color sidebar_bg_color #343f44;
-@define-color sidebar_fg_color #d3c6aa;
-@define-color card_bg_color #343f44;
-@define-color card_fg_color #d3c6aa;
-
+@import url("vyeos-theme.css");
+/* Application rules; palette variables come from theme-switch. */
 textview selection,
 entry selection,
 spinbutton selection,
 selectable selection {
-    background-color: #7fbbb3;
-    color: #2d353b;
+    background-color: @vyeos_primary;
+    color: @vyeos_bg_dim;
 }
 
 .sidebar,
 .navigation-sidebar,
 .sidebar:backdrop,
 .navigation-sidebar:backdrop {
-    background-color: #343f44;
-    color: #d3c6aa;
+    background-color: @vyeos_bg1;
+    color: @vyeos_foreground;
 }
 
 .sidebar title,
@@ -48,6 +22,6 @@ selectable selection {
 .navigation-sidebar .sidebar-title,
 .sidebar-title,
 .sidebar-title:backdrop {
-    background-color: #343f44;
-    color: #d3c6aa;
+    background-color: @vyeos_bg1;
+    color: @vyeos_foreground;
 }

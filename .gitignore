@@ -6,6 +6,8 @@
 # Local editor and application state
 config/nvim/.neoconf.json
 config/fish/fish_variables
+config/gtk-3.0/vyeos-theme.css
+config/gtk-4.0/vyeos-theme.css
 
 # Never version credentials, keys, or browser/application profiles.
 secrets/

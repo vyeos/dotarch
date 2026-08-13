@@ -44,24 +44,7 @@ local menu        = "hyprlauncher"
 ----  COLORS  ------
 --------------------
 
--- Everforest dark medium palette
--- https://everforest.vercel.app/palette
-
-local efBg0    = "rgba(2d353bee)" -- bg 0
-local efBg1    = "rgba(343f44ee)" -- bg 1
-local efBg3    = "rgba(475258ee)" -- bg 3
-local efBgDim  = "rgba(232a2eee)" -- bg dim
-local efFg     = "rgba(d3c6aaee)" -- fg
-local efGrey0  = "rgba(7a8478ee)" -- grey 0
-local efGrey1  = "rgba(859289ee)" -- grey 1
-local efGrey2  = "rgba(9da9a0ee)" -- grey 2
-local efRed    = "rgba(e67e80ee)"
-local efYellow = "rgba(dbbc7fee)"
-local efGreen  = "rgba(a7c080ee)"
-local efAqua   = "rgba(83c092ee)"
-local efBlue   = "rgba(7fbbb3ee)"
-local efPurple = "rgba(d699b6ee)"
-local efOrange = "rgba(e69875ee)"
+local theme = dofile(os.getenv("HOME") .. "/.cache/vyeos/theme/hyprland.lua")
 
 
 -------------------
@@ -75,6 +58,7 @@ local efOrange = "rgba(e69875ee)"
 --
 hl.on("hyprland.start", function()
   hl.exec_cmd("awww-daemon")
+  hl.exec_cmd("sleep 0.5 && ~/.config/quickshell/scripts/theme-system.sh restore-wallpaper")
   hl.exec_cmd("wl-paste --type text --watch cliphist store")
   hl.exec_cmd("wl-paste --type image --watch cliphist store")
   hl.exec_cmd("hypridle")
@@ -128,8 +112,8 @@ hl.config({
     border_size      = 2,
 
     col              = {
-      active_border   = { colors = { efGreen } },
-      inactive_border = "rgba(859289aa)",
+      active_border   = { colors = { theme.primary } },
+      inactive_border = theme.muted_dark:gsub("ee%)", "aa)"),
     },
 
     -- Set to true to enable resizing windows by clicking and dragging on borders and gaps
@@ -152,7 +136,7 @@ hl.config({
       enabled      = true,
       range        = 4,
       render_power = 3,
-      color        = 0xee232a2e,
+      color        = theme.bg_dim,
     },
 
     blur             = {
@@ -244,7 +228,7 @@ hl.config({
     force_default_wallpaper  = 0,             -- Set to 0 or 1 to disable the anime mascot wallpapers
     disable_hyprland_logo    = true,          -- If true disables the random hyprland logo / anime girl background. :(
     disable_splash_rendering = true,
-    background_color         = 'rgb(3C4841)', -- Everforest background green
+    background_color         = theme.primary_container:gsub("rgba", "rgb"):gsub("ee%)", ")"),
   },
 })
 
@@ -296,6 +280,8 @@ hl.bind(mainMod .. " + SPACE", hl.dsp.exec_cmd("qs ipc call notch toggle launche
 hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("qs ipc call notch toggle clipboard"))
 hl.bind(hyper .. " + slash", hl.dsp.exec_cmd("qs ipc call notch toggle todo"))
 hl.bind(hyper .. " + N", hl.dsp.exec_cmd("qs ipc call notch toggle notes"))
+hl.bind(mainMod .. " + SHIFT + T", hl.dsp.exec_cmd("qs ipc call notch toggle theme"))
+hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("qs ipc call notch toggle wallpaper"))
 hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd("qs ipc call notch toggle capture"))
 hl.bind(mainMod .. " + ESCAPE", hl.dsp.exec_cmd("qs ipc call notch toggle power"))
 

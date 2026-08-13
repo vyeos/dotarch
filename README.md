@@ -43,3 +43,24 @@ The installer also enables a user service that restores the built-in
 Ryzen/ALC285 microphone to its 0 dB hardware baseline (shown as 10%) and unmutes it whenever the
 audio session starts. The WirePlumber soft-mixer workaround is limited to
 playback so it does not force the microphone's hardware gain to maximum.
+
+## Desktop themes and wallpapers
+
+Desktop colors have one source of truth in `~/.config/vyeos/themes`. Run
+`theme-switch <slug>` to generate matching colors for Quickshell, Hyprland,
+Hyprlock, Alacritty, GTK, Fish/eza, and Neovim. Generated files and the active
+selection live below `~/.cache/vyeos/theme` and `~/.local/state/vyeos`.
+
+Wallpapers are grouped by theme below `~/Pictures/Wallpapers/<slug>`. The
+wallpaper picker only displays images from the active theme. The installer
+creates reference folders for Everforest, Catppuccin Mocha, Gruvbox Dark,
+Nord, Tokyo Night, Rosé Pine, and Dracula.
+
+- `Super+Shift+T`: open the theme selector
+- `Super+Shift+W`: open the wallpaper selector
+- `theme-switch everforest`: switch from a terminal
+- `wallpaper-set ~/Pictures/Wallpapers/everforest/example.jpg`: set and save a wallpaper
+
+Existing GTK applications and shells may need to be restarted to consume new
+colors. Alacritty, Hyprland, and Quickshell reload automatically; Neovim reads
+the selected palette when a new instance starts.

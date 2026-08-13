@@ -12,6 +12,8 @@ Singleton {
         "clipboard": 365,
         "todo": 420,
         "notes": 500,
+        "theme": 420,
+        "wallpaper": 500,
         "capture": 395,
         "power": 380
     })
@@ -21,6 +23,8 @@ Singleton {
         "clipboard": 80,
         "todo": 87,
         "notes": 430,
+        "theme": 402,
+        "wallpaper": 382,
         "capture": 208,
         "power": 56
     })
@@ -71,7 +75,7 @@ Singleton {
     }
 
     function cycle(offset) {
-        const panels = ["clock", "control", "launcher", "clipboard", "todo", "notes", "capture", "power"];
+        const panels = ["clock", "control", "launcher", "clipboard", "todo", "notes", "theme", "wallpaper", "capture", "power"];
         const current = Math.max(0, panels.indexOf(panel));
         setPanel(panels[(current + offset + panels.length) % panels.length]);
     }
@@ -210,7 +214,7 @@ Singleton {
 
         property int nightLightTemperature: 4500
 
-        reloadableId: "everforest-notch-state"
+        reloadableId: "vyeos-notch-state"
     }
 
 }

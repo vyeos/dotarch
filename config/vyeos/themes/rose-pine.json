@@ -1,0 +1,15 @@
+{
+  "name": "Rosé Pine",
+  "slug": "rose-pine",
+  "appearance": "dark",
+  "colors": {
+    "bg_dim": "#191724", "bg0": "#1f1d2e", "bg1": "#26233a",
+    "bg2": "#393552", "bg3": "#403d52", "bg4": "#524f67",
+    "primary_container": "#393552", "secondary_container": "#403d52",
+    "foreground": "#e0def4", "muted": "#908caa", "muted_dark": "#6e6a86",
+    "red": "#eb6f92", "yellow": "#f6c177", "green": "#9ccfd8",
+    "primary": "#c4a7e7", "blue": "#31748f", "aqua": "#9ccfd8",
+    "orange": "#f6c177", "purple": "#c4a7e7"
+  },
+  "applications": { "neovim": "rose-pine", "folder_color": "pink" }
+}
