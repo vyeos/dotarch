@@ -20,7 +20,7 @@ FocusScope {
 
         PanelHeader {
             title: "Todo"
-            onCloseRequested: ShellState.close()
+            showCloseButton: false
         }
 
         Row {

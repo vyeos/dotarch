@@ -27,21 +27,28 @@ Singleton {
     property alias todos: persistence.todos
     property alias nightLightTemperature: persistence.nightLightTemperature
 
+    function setPanel(name) {
+        if (panel === "todo" || name === "todo")
+            clearCompletedTodos();
+
+        panel = name;
+    }
+
     function show(name) {
         if (name !== "clock" && panelWidths[name] === undefined)
             return ;
 
-        panel = panel === name ? "clock" : name;
+        setPanel(panel === name ? "clock" : name);
     }
 
     function close() {
-        panel = "clock";
+        setPanel("clock");
     }
 
     function cycle(offset) {
         const panels = ["clock", "control", "launcher", "clipboard", "todo", "capture", "power"];
         const current = Math.max(0, panels.indexOf(panel));
-        panel = panels[(current + offset + panels.length) % panels.length];
+        setPanel(panels[(current + offset + panels.length) % panels.length]);
     }
 
     function addTodo(text) {
@@ -64,6 +71,10 @@ Singleton {
             "done": !next[index].done
         };
         todos = next;
+    }
+
+    function clearCompletedTodos() {
+        todos = todos.filter((todo) => !todo.done);
     }
 
     PersistentProperties {
