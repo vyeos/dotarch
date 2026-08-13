@@ -73,6 +73,8 @@ ShellRoot {
                 return;
 
             root.pendingCaptureMode = mode;
+            if (mode !== "region")
+                ShellState.close();
             captureShortcutDelay.restart();
         }
 

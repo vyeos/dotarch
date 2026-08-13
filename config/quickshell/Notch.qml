@@ -375,9 +375,9 @@ PanelWindow {
 
     HyprlandFocusGrab {
         windows: [window]
-        active: ShellState.expanded
+        active: ShellState.expanded && Backend.captureSelectionMode !== "region"
         onCleared: {
-            if (ShellState.expanded)
+            if (ShellState.expanded && Backend.captureSelectionMode !== "region")
                 ShellState.close();
 
         }
