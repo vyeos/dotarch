@@ -11,6 +11,7 @@ Singleton {
         "launcher": 410,
         "clipboard": 365,
         "todo": 420,
+        "notes": 500,
         "capture": 395,
         "power": 380
     })
@@ -19,6 +20,7 @@ Singleton {
         "launcher": 290,
         "clipboard": 80,
         "todo": 87,
+        "notes": 430,
         "capture": 208,
         "power": 56
     })
@@ -69,7 +71,7 @@ Singleton {
     }
 
     function cycle(offset) {
-        const panels = ["clock", "control", "launcher", "clipboard", "todo", "capture", "power"];
+        const panels = ["clock", "control", "launcher", "clipboard", "todo", "notes", "capture", "power"];
         const current = Math.max(0, panels.indexOf(panel));
         setPanel(panels[(current + offset + panels.length) % panels.length]);
     }

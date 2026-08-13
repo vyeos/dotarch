@@ -294,6 +294,7 @@ hl.bind(hyper .. " + C", hl.dsp.exec_cmd("qs ipc call notch toggle control"))
 hl.bind(mainMod .. " + SPACE", hl.dsp.exec_cmd("qs ipc call notch toggle launcher"))
 hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("qs ipc call notch toggle clipboard"))
 hl.bind(hyper .. " + slash", hl.dsp.exec_cmd("qs ipc call notch toggle todo"))
+hl.bind(hyper .. " + N", hl.dsp.exec_cmd("qs ipc call notch toggle notes"))
 hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd("qs ipc call notch toggle capture"))
 hl.bind(mainMod .. " + ESCAPE", hl.dsp.exec_cmd("qs ipc call notch toggle power"))
 

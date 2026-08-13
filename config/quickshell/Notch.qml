@@ -32,6 +32,7 @@ PanelWindow {
             "launcher": launcherPanel,
             "clipboard": clipboardPanel,
             "todo": todoPanel,
+            "notes": quickNotesPanel,
             "capture": capturePanel,
             "power": powerPanel
         };
@@ -43,6 +44,7 @@ PanelWindow {
             "launcher": launcherPanel,
             "clipboard": clipboardPanel,
             "todo": todoPanel,
+            "notes": quickNotesPanel,
             "capture": capturePanel,
             "power": powerPanel
         };
@@ -369,6 +371,14 @@ PanelWindow {
 
                 width: parent.width
                 visible: window.displayedPanel === "todo"
+            }
+
+            QuickNotesPanel {
+                id: quickNotesPanel
+
+                width: parent.width
+                height: parent.height
+                visible: window.displayedPanel === "notes"
             }
 
             CapturePanel {
