@@ -73,7 +73,6 @@ ShellRoot {
                 return;
 
             root.pendingCaptureMode = mode;
-            ShellState.close();
             captureShortcutDelay.restart();
         }
 
