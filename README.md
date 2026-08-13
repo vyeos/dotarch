@@ -50,6 +50,9 @@ Desktop colors have one source of truth in `~/.config/vyeos/themes`. Run
 `theme-switch <slug>` to generate matching colors for Quickshell, Hyprland,
 Hyprlock, Alacritty, GTK, Fish/eza, and Neovim. Generated files and the active
 selection live below `~/.cache/vyeos/theme` and `~/.local/state/vyeos`.
+Alacritty reuses the installed files under `~/.config/alacritty/themes/themes`;
+each theme JSON maps to one of those filenames through `applications.alacritty`,
+and the switcher updates the `general.import` entry in `alacritty.toml`.
 
 Wallpapers are grouped by theme below `~/Pictures/Wallpapers/<slug>`. The
 wallpaper picker only displays images from the active theme. The installer

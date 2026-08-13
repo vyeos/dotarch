@@ -11,5 +11,5 @@
     "primary": "#88c0d0", "blue": "#81a1c1", "aqua": "#8fbcbb",
     "orange": "#d08770", "purple": "#b48ead"
   },
-  "applications": { "neovim": "nordic", "folder_color": "nordic" }
+  "applications": { "neovim": "nordic", "alacritty": "nord", "folder_color": "nordic" }
 }

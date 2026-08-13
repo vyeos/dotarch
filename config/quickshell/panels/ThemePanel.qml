@@ -54,8 +54,8 @@ FocusScope {
             id: themeList
             width: parent.width
             height: parent.height - 40
-            cellWidth: width / 2
-            cellHeight: 58
+            cellWidth: width / 3
+            cellHeight: 90
             clip: true
             model: AppearanceState.themes
 
@@ -71,50 +71,48 @@ FocusScope {
                 Keys.onSpacePressed: root.activate(index)
                 Keys.onLeftPressed: root.focusTheme(index - 1)
                 Keys.onRightPressed: root.focusTheme(index + 1)
-                Keys.onDownPressed: root.focusTheme(index + 2)
-                Keys.onUpPressed: root.focusTheme(index - 2)
+                Keys.onDownPressed: root.focusTheme(index + 3)
+                Keys.onUpPressed: root.focusTheme(index - 3)
 
                 Rectangle {
                     anchors.fill: parent
                     anchors.margins: 4
-                    radius: Theme.radiusSmall
-                    color: themeRow.activeFocus ? Theme.bg1 : "transparent"
-                    border.width: modelData.slug === Theme.slug ? 1 : 0
+                    radius: Theme.radius
+                    color: themeRow.activeFocus ? modelData.colors.bg1 : modelData.colors.bg0
+                    border.width: modelData.slug === Theme.slug ? 2 : 0
                     border.color: Theme.primary
                 }
 
-                Row {
-                    anchors.fill: parent
-                    anchors.margins: 12
-                    spacing: 7
+                Column {
+                    anchors.centerIn: parent
+                    spacing: 8
 
                     Row {
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: 3
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 5
+
                         Repeater {
                             model: [themeRow.modelData.colors.primary, themeRow.modelData.colors.blue, themeRow.modelData.colors.purple]
+
                             Rectangle {
                                 required property var modelData
-                                width: 9
-                                height: 28
-                                radius: 4
+                                width: 25
+                                height: 7
+                                radius: height / 2
                                 color: modelData
                             }
                         }
                     }
 
-                    Column {
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: parent.width - 62
-                        spacing: 1
-                        ShellText { width: parent.width; text: themeRow.modelData.name; elide: Text.ElideRight; font.weight: Font.DemiBold; font.pixelSize: 11 }
-                        ShellText { text: themeRow.modelData.slug === Theme.slug ? "Active" : themeRow.modelData.appearance; color: Theme.mutedDark; font.pixelSize: 9 }
-                    }
-
                     ShellText {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: themeRow.modelData.slug === Theme.slug ? "󰄬" : ""
-                        color: Theme.primary
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: themeList.cellWidth - 20
+                        horizontalAlignment: Text.AlignHCenter
+                        text: themeRow.modelData.name
+                        color: themeRow.modelData.colors.foreground
+                        elide: Text.ElideRight
+                        font.pixelSize: 11
+                        font.weight: Font.DemiBold
                     }
                 }
 

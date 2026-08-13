@@ -11,5 +11,5 @@
     "primary": "#bd93f9", "blue": "#8be9fd", "aqua": "#8be9fd",
     "orange": "#ffb86c", "purple": "#ff79c6"
   },
-  "applications": { "neovim": "dracula", "folder_color": "violet" }
+  "applications": { "neovim": "dracula", "alacritty": "dracula", "folder_color": "violet" }
 }

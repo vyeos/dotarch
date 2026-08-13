@@ -23,5 +23,5 @@
     "orange": "#e69875",
     "purple": "#d699b6"
   },
-  "applications": { "neovim": "everforest", "folder_color": "green" }
+  "applications": { "neovim": "everforest", "alacritty": "everforest_dark_medium", "folder_color": "green" }
 }

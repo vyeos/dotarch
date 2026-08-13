@@ -11,5 +11,5 @@
     "primary": "#c4a7e7", "blue": "#31748f", "aqua": "#9ccfd8",
     "orange": "#f6c177", "purple": "#c4a7e7"
   },
-  "applications": { "neovim": "rose-pine", "folder_color": "pink" }
+  "applications": { "neovim": "rose-pine", "alacritty": "rose_pine", "folder_color": "pink" }
 }

@@ -11,5 +11,5 @@
     "primary": "#cba6f7", "blue": "#89b4fa", "aqua": "#94e2d5",
     "orange": "#fab387", "purple": "#cba6f7"
   },
-  "applications": { "neovim": "catppuccin", "folder_color": "violet" }
+  "applications": { "neovim": "catppuccin", "alacritty": "catppuccin_mocha", "folder_color": "violet" }
 }

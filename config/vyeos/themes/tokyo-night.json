@@ -11,5 +11,5 @@
     "primary": "#7aa2f7", "blue": "#7aa2f7", "aqua": "#7dcfff",
     "orange": "#ff9e64", "purple": "#bb9af7"
   },
-  "applications": { "neovim": "tokyonight", "folder_color": "blue" }
+  "applications": { "neovim": "tokyonight", "alacritty": "tokyo_night", "folder_color": "blue" }
 }

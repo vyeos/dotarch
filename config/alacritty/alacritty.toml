@@ -1,7 +1,5 @@
 [general]
-import = [
-    "~/.cache/vyeos/theme/alacritty.toml"
-]
+import = ["~/.config/alacritty/themes/themes/rose_pine.toml"]
 
 [env]
 TERM = "xterm-256color"

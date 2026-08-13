@@ -100,6 +100,24 @@ apply_folder_icons() {
   gsettings set org.gnome.desktop.interface icon-theme "$theme_name" >/dev/null 2>&1 || true
 }
 
+apply_alacritty_theme() {
+  local file=$1 theme_name theme_path config_path resolved_config
+  theme_name=$(jq -er '.applications.alacritty' "$file")
+  [[ $theme_name =~ ^[A-Za-z0-9_-]+$ ]] || die "invalid Alacritty theme name: $theme_name"
+  theme_path=$HOME/.config/alacritty/themes/themes/$theme_name.toml
+  config_path=$HOME/.config/alacritty/alacritty.toml
+  [[ -f $theme_path ]] || die "Alacritty theme not found: $theme_path"
+  [[ -e $config_path ]] || die "Alacritty config not found: $config_path"
+  resolved_config=$(readlink -f -- "$config_path")
+  sed -i "2c\\import = [\"~/.config/alacritty/themes/themes/$theme_name.toml\"]" "$resolved_config"
+  rm -f -- "$cache_dir/alacritty.toml"
+}
+
+apply_fish_theme() {
+  command -v fish >/dev/null || return 0
+  fish -c 'source $argv[1]' "$cache_dir/fish.fish" >/dev/null 2>&1
+}
+
 write_generated_files() {
   local file=$1 slug name appearance
   slug=$(jq -er '.slug' "$file")
@@ -137,27 +155,6 @@ write_generated_files() {
   } > "$tmp/hyprlock.conf"
 
   {
-    printf '[colors.primary]\nbackground = "%s"\nforeground = "%s"\n\n' \
-      "$(jq -r '.colors.bg0' "$file")" "$(jq -r '.colors.foreground' "$file")"
-    printf 'dim_foreground = "%s"\nbright_foreground = "%s"\n\n' \
-      "$(jq -r '.colors.muted_dark' "$file")" "$(jq -r '.colors.foreground' "$file")"
-    printf '[colors.cursor]\ntext = "%s"\ncursor = "%s"\n\n' \
-      "$(jq -r '.colors.bg0' "$file")" "$(jq -r '.colors.primary' "$file")"
-    printf '[colors.selection]\ntext = "%s"\nbackground = "%s"\n\n' \
-      "$(jq -r '.colors.foreground' "$file")" "$(jq -r '.colors.bg3' "$file")"
-    printf '[colors.normal]\nblack = "%s"\nred = "%s"\ngreen = "%s"\nyellow = "%s"\nblue = "%s"\nmagenta = "%s"\ncyan = "%s"\nwhite = "%s"\n\n' \
-      "$(jq -r '.colors.bg_dim' "$file")" "$(jq -r '.colors.red' "$file")" \
-      "$(jq -r '.colors.green' "$file")" "$(jq -r '.colors.yellow' "$file")" \
-      "$(jq -r '.colors.blue' "$file")" "$(jq -r '.colors.purple' "$file")" \
-      "$(jq -r '.colors.aqua' "$file")" "$(jq -r '.colors.foreground' "$file")"
-    printf '[colors.bright]\nblack = "%s"\nred = "%s"\ngreen = "%s"\nyellow = "%s"\nblue = "%s"\nmagenta = "%s"\ncyan = "%s"\nwhite = "%s"\n' \
-      "$(jq -r '.colors.bg4' "$file")" "$(jq -r '.colors.red' "$file")" \
-      "$(jq -r '.colors.green' "$file")" "$(jq -r '.colors.yellow' "$file")" \
-      "$(jq -r '.colors.blue' "$file")" "$(jq -r '.colors.purple' "$file")" \
-      "$(jq -r '.colors.aqua' "$file")" "$(jq -r '.colors.foreground' "$file")"
-  } > "$tmp/alacritty.toml"
-
-  {
     printf '/* Generated from %s. */\n' "$slug"
     while IFS=$'\t' read -r key value; do
       printf '@define-color vyeos_%s %s;\n' "$key" "$value"
@@ -185,16 +182,16 @@ write_generated_files() {
   yellow=$(jq -r '.colors.yellow[1:]' "$file")
   red=$(jq -r '.colors.red[1:]' "$file")
   {
-    printf 'set -gx VYEOS_THEME %s\n' "$slug"
-    printf 'set -gx VYEOS_PRIMARY %s\n' "$primary"
-    printf 'set -gx EZA_COLORS "di=38;2;%s:fi=38;2;%s:ex=38;2;%s:ln=38;2;%s:or=38;2;%s"\n' \
+    printf 'set -Ux VYEOS_THEME %s\n' "$slug"
+    printf 'set -Ux VYEOS_PRIMARY %s\n' "$primary"
+    printf 'set -Ux EZA_COLORS "di=38;2;%s:fi=38;2;%s:ex=38;2;%s:ln=38;2;%s:or=38;2;%s"\n' \
       "$(printf '%d;%d;%d' "0x${green:0:2}" "0x${green:2:2}" "0x${green:4:2}")" \
       "$(printf '%d;%d;%d' "0x${foreground:0:2}" "0x${foreground:2:2}" "0x${foreground:4:2}")" \
       "$(printf '%d;%d;%d' "0x${primary:0:2}" "0x${primary:2:2}" "0x${primary:4:2}")" \
       "$(printf '%d;%d;%d' "0x${aqua:0:2}" "0x${aqua:2:2}" "0x${aqua:4:2}")" \
       "$(printf '%d;%d;%d' "0x${red:0:2}" "0x${red:2:2}" "0x${red:4:2}")"
-    printf 'set -gx VYEOS_PROMPT_PATH %s\nset -gx VYEOS_PROMPT_GIT %s\nset -gx VYEOS_PROMPT_OK %s\nset -gx VYEOS_PROMPT_ERROR %s\n' \
-      "$aqua" "$yellow" "$green" "$red"
+    printf 'set -Ux VYEOS_PROMPT_PATH %s\nset -Ux VYEOS_PROMPT_MUTED %s\nset -Ux VYEOS_PROMPT_GIT %s\nset -Ux VYEOS_PROMPT_OK %s\nset -Ux VYEOS_PROMPT_ERROR %s\n' \
+      "$aqua" "$(jq -r '.colors.muted_dark[1:]' "$file")" "$yellow" "$green" "$red"
   } > "$tmp/fish.fish"
 
   {
@@ -264,10 +261,9 @@ set_wallpaper() {
 
 display_wallpaper() {
   awww img "$1" \
-    --transition-type fade \
-    --transition-duration 1.4 \
-    --transition-fps 60 \
-    --transition-bezier 0.22,1,0.36,1
+    --transition-type center \
+    --transition-duration 1.15 \
+    --transition-fps 60
 }
 
 restore_wallpaper() {
@@ -297,6 +293,8 @@ apply_theme() {
   file=$(theme_file "$slug")
   pgrep -x nautilus >/dev/null 2>&1 && nautilus_was_running=true
   write_generated_files "$file"
+  apply_alacritty_theme "$file"
+  apply_fish_theme
   apply_folder_icons "$file"
   hyprctl reload >/dev/null 2>&1 || true
   qs ipc call theme reload >/dev/null 2>&1 || true
