@@ -12,8 +12,6 @@ Singleton {
     property int nightLightTemperatureInFlight: -1
     property string nightLightStatus: "off"
     property string powerProfile: "unavailable"
-    property int keyboardBacklightLevel: -1
-    property int keyboardBacklightMaximum: 0
     property bool recording: false
     property var clipboardItems: []
     property string clipboardContents: ""
@@ -42,8 +40,6 @@ Singleton {
             nightLightStatusProcess.running = true;
         if (!powerProfileStatusProcess.running)
             powerProfileStatusProcess.running = true;
-        if (!keyboardBacklightStatusProcess.running)
-            keyboardBacklightStatusProcess.running = true;
     }
 
     function toggleNightLight() {
@@ -60,26 +56,6 @@ Singleton {
     function cyclePowerProfile() {
         if (!powerProfileToggleProcess.running)
             powerProfileToggleProcess.exec([helper, "power-profile-cycle"]);
-    }
-
-    function cycleKeyboardBacklight() {
-        if (!keyboardBacklightToggleProcess.running)
-            keyboardBacklightToggleProcess.exec([helper, "keyboard-backlight-cycle"]);
-    }
-
-    function setKeyboardBacklight(value) {
-        const level = Math.max(0, Math.min(keyboardBacklightMaximum, Math.round(value)));
-        if (level === keyboardBacklightLevel)
-            return;
-
-        keyboardBacklightLevel = level;
-        keyboardBacklightCommit.restart();
-    }
-
-    function setKeyboardBacklightTimeout(value, unit) {
-        ShellState.keyboardBacklightTimeoutValue = Math.max(0, Math.min(3600, Math.round(value)));
-        ShellState.keyboardBacklightTimeoutUnit = unit === "sec" ? "sec" : "min";
-        keyboardBacklightIdleProcess.exec([helper, "keyboard-backlight-idle", String(ShellState.keyboardBacklightTimeoutValue), ShellState.keyboardBacklightTimeoutUnit]);
     }
 
     function setBrightness(value) {
@@ -241,26 +217,6 @@ Singleton {
     }
 
     Process {
-        id: keyboardBacklightStatusProcess
-
-        command: [root.helper, "keyboard-backlight-status"]
-        running: true
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const output = text.trim();
-                if (output === "unavailable") {
-                    root.keyboardBacklightLevel = -1;
-                    root.keyboardBacklightMaximum = 0;
-                    return;
-                }
-                const values = output.split("/");
-                root.keyboardBacklightLevel = Number(values[0]);
-                root.keyboardBacklightMaximum = Number(values[1]);
-            }
-        }
-    }
-
-    Process {
         id: nightLightToggleProcess
 
         onExited: root.refreshQuickControls()
@@ -270,25 +226,6 @@ Singleton {
         id: powerProfileToggleProcess
 
         onExited: root.refreshQuickControls()
-    }
-
-    Process {
-        id: keyboardBacklightToggleProcess
-
-        onExited: root.refreshQuickControls()
-    }
-
-    Process {
-        id: keyboardBacklightSetProcess
-
-        onExited: root.refreshQuickControls()
-    }
-
-    Process {
-        id: keyboardBacklightIdleProcess
-
-        command: [root.helper, "keyboard-backlight-idle", String(ShellState.keyboardBacklightTimeoutValue), ShellState.keyboardBacklightTimeoutUnit]
-        running: true
     }
 
     Process {
@@ -462,16 +399,6 @@ Singleton {
                 root.nightLightTemperatureInFlight = ShellState.nightLightTemperature;
                 nightLightSetProcess.exec([root.helper, "night-light-set", String(root.nightLightTemperatureInFlight)]);
             }
-        }
-    }
-
-    Timer {
-        id: keyboardBacklightCommit
-
-        interval: 60
-        onTriggered: {
-            if (!keyboardBacklightSetProcess.running)
-                keyboardBacklightSetProcess.exec([root.helper, "keyboard-backlight-set", String(root.keyboardBacklightLevel)]);
         }
     }
 

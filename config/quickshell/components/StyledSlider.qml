@@ -5,10 +5,7 @@ FocusScope {
     id: root
 
     property real value: 0
-    property real stepSize: 0
-    property int stepCount: 0
     property bool filled: false
-    property var levelLabels: []
     property string icon: ""
     property string accessibleName: ""
 
@@ -18,18 +15,16 @@ FocusScope {
         const trackX = filled ? filledTrack.x : rail.x;
         const trackWidth = filled ? filledTrack.width : rail.width;
         const rawValue = (x - trackX) / trackWidth;
-        const boundedValue = Math.max(0, Math.min(1, rawValue));
-        const next = stepSize > 0 ? Math.max(0, Math.min(1, Math.round(boundedValue / stepSize) * stepSize)) : boundedValue;
-        moved(next);
+        moved(Math.max(0, Math.min(1, rawValue)));
     }
 
     implicitHeight: 40
     activeFocusOnTab: true
     Keys.onLeftPressed: {
-        moved(Math.max(0, value - (stepSize > 0 ? stepSize : 0.05)));
+        moved(Math.max(0, value - 0.05));
     }
     Keys.onRightPressed: {
-        moved(Math.min(1, value + (stepSize > 0 ? stepSize : 0.05)));
+        moved(Math.min(1, value + 0.05));
     }
     Accessible.role: Accessible.Slider
     Accessible.name: accessibleName
@@ -79,20 +74,6 @@ FocusScope {
             color: Theme.primary
         }
 
-        Repeater {
-            model: root.stepCount
-
-            delegate: Rectangle {
-                required property int index
-
-                x: root.stepCount > 1 ? (rail.width - width) * index / (root.stepCount - 1) : 0
-                anchors.verticalCenter: parent.verticalCenter
-                width: 4
-                height: 4
-                radius: 2
-                color: index / Math.max(1, root.stepCount - 1) <= root.value ? Theme.primary : Theme.bg4
-            }
-        }
     }
 
     Rectangle {
@@ -126,7 +107,7 @@ FocusScope {
             anchors.left: parent.left
             anchors.top: parent.top
             anchors.bottom: parent.bottom
-            width: root.levelLabels.length > 0 && root.value <= 0 ? 0 : Math.max(height, parent.width * Math.max(0, Math.min(1, root.value)))
+            width: Math.max(height, parent.width * Math.max(0, Math.min(1, root.value)))
             radius: height / 2
             color: Theme.primary
         }
@@ -144,42 +125,4 @@ FocusScope {
         }
     }
 
-    Repeater {
-        model: root.levelLabels
-
-        delegate: Item {
-            required property int index
-            required property var modelData
-
-            z: 2
-            x: {
-                if (index === 0)
-                    return 8;
-                if (index === root.levelLabels.length - 1)
-                    return root.width - width - 8;
-                return root.width * index / (root.levelLabels.length - 1) - width / 2;
-            }
-            width: 32
-            height: root.height
-
-            ShellText {
-                anchors.centerIn: parent
-                text: parent.modelData
-                color: {
-                    const target = parent.index / Math.max(1, root.levelLabels.length - 1);
-                    if (root.value > 0 && target <= root.value)
-                        return Theme.bgDim;
-                    return target === root.value ? Theme.foreground : Theme.muted;
-                }
-                font.pixelSize: 11
-                font.weight: Font.Bold
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: root.moved(parent.index / Math.max(1, root.levelLabels.length - 1))
-            }
-        }
-    }
 }

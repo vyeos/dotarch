@@ -26,8 +26,6 @@ Singleton {
     readonly property int targetWidth: expanded ? panelWidths[panel] : 170
     property alias todos: persistence.todos
     property alias nightLightTemperature: persistence.nightLightTemperature
-    property alias keyboardBacklightTimeoutValue: persistence.keyboardBacklightTimeoutValue
-    property alias keyboardBacklightTimeoutUnit: persistence.keyboardBacklightTimeoutUnit
 
     function show(name) {
         if (name !== "clock" && panelWidths[name] === undefined)
@@ -73,8 +71,6 @@ Singleton {
 
         property var todos: []
         property int nightLightTemperature: 4500
-        property int keyboardBacklightTimeoutValue: 5
-        property string keyboardBacklightTimeoutUnit: "min"
 
         reloadableId: "everforest-notch-state"
     }

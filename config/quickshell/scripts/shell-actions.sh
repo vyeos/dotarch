@@ -105,43 +105,6 @@ case "$action" in
     esac
     powerprofilesctl set "$next"
     ;;
-  keyboard-backlight-status)
-    keyboard_device=asus::kbd_backlight
-    brightnessctl --device="$keyboard_device" get >/dev/null 2>&1 || { echo unavailable; exit; }
-    current=$(brightnessctl --device="$keyboard_device" get)
-    maximum=$(brightnessctl --device="$keyboard_device" max)
-    printf '%s/%s\n' "$current" "$maximum"
-    ;;
-  keyboard-backlight-cycle)
-    keyboard_device=asus::kbd_backlight
-    current=$(brightnessctl --device="$keyboard_device" get) || exit 1
-    maximum=$(brightnessctl --device="$keyboard_device" max) || exit 1
-    next=$(( (current + 1) % (maximum + 1) ))
-    brightnessctl --device="$keyboard_device" set "$next" >/dev/null
-    ;;
-  keyboard-backlight-set)
-    keyboard_device=asus::kbd_backlight
-    level=${2:?keyboard backlight level required}
-    maximum=$(brightnessctl --device="$keyboard_device" max) || exit 1
-    [[ $level =~ ^[0-9]+$ ]] && (( level >= 0 && level <= maximum ))
-    brightnessctl --device="$keyboard_device" set "$level" >/dev/null
-    ;;
-  keyboard-backlight-idle)
-    value=${2:?keyboard backlight timeout required}
-    unit=${3:-min}
-    [[ $value =~ ^[0-9]+$ ]] && (( value >= 0 && value <= 3600 ))
-    [[ $unit == sec || $unit == min ]]
-    pkill -x hypridle 2>/dev/null || true
-    (( value == 0 )) && exit
-    idle_config="${XDG_RUNTIME_DIR:?}/quickshell-hypridle.conf"
-    if [[ $unit == min ]]; then
-      timeout=$((value * 60))
-    else
-      timeout=$value
-    fi
-    printf 'listener {\n    timeout = %d\n    on-timeout = brightnessctl -sd asus::kbd_backlight set 0\n    on-resume = brightnessctl -rd asus::kbd_backlight\n}\n' "$timeout" > "$idle_config"
-    hypridle --quiet --config "$idle_config" >/dev/null 2>&1 &
-    ;;
   clipboard-list)
     cliphist list | head -n 50
     ;;

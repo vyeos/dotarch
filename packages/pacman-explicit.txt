@@ -22,9 +22,7 @@ github-cli
 gnome-clocks
 grim
 gst-plugin-pipewire
-hypridle
 hyprland
-hypridle
 hyprlock
 hyprpolkitagent
 hyprsunset
