@@ -32,7 +32,7 @@ chmod 600 "$HOME/.ssh/known_hosts"
 for file in \
   alacritty/alacritty.toml \
   fish/config.fish fish/functions/la.fish fish/functions/ll.fish \
-  hypr/hyprland.lua hypr/hyprlock.conf \
+  hypr/hyprland.lua hypr/hypridle.conf hypr/hyprlock.conf \
   pipewire/pipewire.conf.d/51-alc285-software-volume.conf \
   systemd/user/restore-internal-mic.service \
   wireplumber/wireplumber.conf.d/51-alc285-soft-volume.conf \
