@@ -15,7 +15,10 @@ Singleton {
     property bool recording: false
     property var clipboardItems: []
     property string clipboardContents: ""
+    property string clipboardImageSource: ""
     property bool clipboardContentsLoading: false
+    property string clipboardContentsRequestedId: ""
+    property string clipboardContentsInFlightId: ""
     property string lastCapture: ""
     property string lastError: ""
     property var windowCandidates: []
@@ -80,7 +83,14 @@ Singleton {
         pasteProcess.exec([helper, "clipboard-paste", String(id)]);
     }
 
-    function loadClipboardContents(id, itemPreview) {
+    function loadClipboardContents(id, itemPreview, imageSource) {
+        clipboardContentsRequestedId = "";
+        clipboardImageSource = imageSource || "";
+        if (clipboardImageSource) {
+            clipboardContents = "";
+            clipboardContentsLoading = false;
+            return ;
+        }
         if (itemPreview.startsWith("[[ binary data")) {
             clipboardContents = itemPreview;
             clipboardContentsLoading = false;
@@ -88,7 +98,16 @@ Singleton {
         }
         clipboardContents = "";
         clipboardContentsLoading = true;
-        clipboardContentsProcess.exec([helper, "clipboard-decode", String(id)]);
+        clipboardContentsRequestedId = String(id);
+        startClipboardContentsLoad();
+    }
+
+    function startClipboardContentsLoad() {
+        if (clipboardContentsProcess.running || !clipboardContentsRequestedId)
+            return ;
+
+        clipboardContentsInFlightId = clipboardContentsRequestedId;
+        clipboardContentsProcess.exec([helper, "clipboard-decode", clipboardContentsInFlightId]);
     }
 
     function capture(mode) {
@@ -249,9 +268,12 @@ Singleton {
                     return line.length > 0;
                 }).map((line) => {
                     const separator = line.indexOf("\t");
+                    const fields = separator < 0 ? [] : line.slice(separator + 1).split("\t");
+                    const imageSource = fields.length > 1 && fields[fields.length - 1].startsWith("file://") ? fields.pop() : "";
                     return {
                         "id": separator < 0 ? line : line.slice(0, separator),
-                        "preview": separator < 0 ? line : line.slice(separator + 1).replace(/\t/g, " ")
+                        "preview": separator < 0 ? line : fields.join(" "),
+                        "imageSource": imageSource
                     };
                 });
             }
@@ -365,10 +387,20 @@ Singleton {
     Process {
         id: clipboardContentsProcess
 
-        onExited: root.clipboardContentsLoading = false
+        onExited: {
+            const finishedId = root.clipboardContentsInFlightId;
+            root.clipboardContentsInFlightId = "";
+            if (finishedId === root.clipboardContentsRequestedId)
+                root.clipboardContentsLoading = false;
+            else if (root.clipboardContentsRequestedId)
+                Qt.callLater(root.startClipboardContentsLoad);
+        }
 
         stdout: StdioCollector {
-            onStreamFinished: root.clipboardContents = text
+            onStreamFinished: {
+                if (root.clipboardContentsInFlightId === root.clipboardContentsRequestedId)
+                    root.clipboardContents = text;
+            }
         }
 
     }

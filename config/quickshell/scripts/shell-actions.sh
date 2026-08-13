@@ -27,6 +27,27 @@ publish_capture() {
   printf '%s\n' "$output"
 }
 
+clipboard_list() {
+  local cache_dir line id preview extension image_path
+  cache_dir=${XDG_RUNTIME_DIR:-/run/user/$UID}/quickshell-clipboard
+  mkdir -p "$cache_dir"
+
+  while IFS= read -r line; do
+    id=${line%%$'\t'*}
+    preview=${line#*$'\t'}
+    if [[ $id =~ ^[0-9]+$ && $preview =~ \ (png|jpg|jpeg|webp|gif|bmp)\  ]]; then
+      extension=${BASH_REMATCH[1]}
+      image_path=$cache_dir/$id.$extension
+      if [[ ! -s $image_path ]]; then
+        cliphist decode "$id" > "$image_path"
+      fi
+      printf '%s\t%s\tfile://%s\n' "$id" "$preview" "$image_path"
+    else
+      printf '%s\n' "$line"
+    fi
+  done < <(cliphist list | head -n 50)
+}
+
 window_candidates() {
   local monitors
   monitors=$(hyprctl -j monitors)
@@ -106,7 +127,7 @@ case "$action" in
     powerprofilesctl set "$next"
     ;;
   clipboard-list)
-    cliphist list | head -n 50
+    clipboard_list
     ;;
   clipboard-decode)
     [[ ${2:-} =~ ^[0-9]+$ ]]

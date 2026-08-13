@@ -10,6 +10,7 @@ FocusScope {
     property bool previewVisible: false
     property bool previewTransitionActive: false
     property string previewItemId: ""
+    onSelectedIndexChanged: Qt.callLater(root.syncPreviewToSelection)
 
     function takeInitialFocus() {
         selectedIndex = 0;
@@ -59,9 +60,27 @@ FocusScope {
             previewVisible = false;
             return ;
         }
-        previewItemId = item.id;
         previewVisible = true;
-        Backend.loadClipboardContents(item.id, item.preview);
+        showPreview(item);
+    }
+
+    function showPreview(item) {
+        previewItemId = item.id;
+        Backend.loadClipboardContents(item.id, item.preview, item.imageSource);
+    }
+
+    function syncPreviewToSelection() {
+        if (!previewVisible)
+            return ;
+
+        const item = selectedItem();
+        if (!item) {
+            previewVisible = false;
+            previewItemId = "";
+            return ;
+        }
+        if (item.id !== previewItemId)
+            showPreview(item);
     }
 
     function activateSelection() {
@@ -117,7 +136,10 @@ FocusScope {
                 clip: true
                 selectByMouse: true
                 activeFocusOnTab: true
-                onTextChanged: root.selectedIndex = 0
+                onTextChanged: {
+                    root.selectedIndex = 0;
+                    Qt.callLater(root.syncPreviewToSelection);
+                }
                 Keys.onDownPressed: root.moveSelection(1)
                 Keys.onUpPressed: root.moveSelection(-1)
                 Keys.onReturnPressed: root.activateSelection()
@@ -140,8 +162,8 @@ FocusScope {
             id: clipboardList
 
             width: parent.width
-            height: Math.min(5, count) * 48
-            spacing: 4
+            height: Math.min(5, count) * 46
+            spacing: 2
             clip: true
 
             ShellText {
@@ -167,30 +189,33 @@ FocusScope {
                 width: clipboardList.width
                 height: 44
                 radius: Theme.radiusSmall
-                color: index === root.selectedIndex ? Theme.primaryContainer : Theme.bg0
-                border.width: index === root.selectedIndex ? 1 : 0
-                border.color: Theme.primary
+                color: index === root.selectedIndex ? Theme.primaryContainer : "transparent"
 
                 ShellText {
-                    anchors.left: parent.left
-                    anchors.right: keyHint.left
+                    anchors.left: imageThumbnail.visible ? imageThumbnail.right : parent.left
+                    anchors.right: parent.right
                     anchors.leftMargin: 10
-                    anchors.rightMargin: 8
+                    anchors.rightMargin: 10
                     anchors.verticalCenter: parent.verticalCenter
-                    text: modelData.preview
+                    text: modelData.imageSource ? modelData.preview.replace(/^\[\[ binary data /, "Image · ").replace(/ \]\]$/, "") : modelData.preview
                     elide: Text.ElideRight
                     font.pixelSize: 10
                 }
 
-                ShellText {
-                    id: keyHint
+                Image {
+                    id: imageThumbnail
 
-                    anchors.right: parent.right
-                    anchors.rightMargin: 9
+                    anchors.left: parent.left
+                    anchors.leftMargin: 6
                     anchors.verticalCenter: parent.verticalCenter
-                    text: index === root.selectedIndex ? "↵ paste  ·  space view" : ""
-                    color: Theme.muted
-                    font.pixelSize: 8
+                    width: 32
+                    height: 32
+                    visible: !!modelData.imageSource
+                    source: modelData.imageSource || ""
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    sourceSize.width: 64
+                    sourceSize.height: 64
                 }
 
                 MouseArea {
@@ -228,16 +253,6 @@ FocusScope {
                 font.weight: Font.Bold
             }
 
-            ShellText {
-                anchors.right: parent.right
-                anchors.top: parent.top
-                anchors.rightMargin: 11
-                anchors.topMargin: 9
-                text: "space close"
-                color: Theme.mutedDark
-                font.pixelSize: 8
-            }
-
             Flickable {
                 id: previewViewport
 
@@ -256,11 +271,20 @@ FocusScope {
                     id: previewText
 
                     width: previewViewport.width
+                    visible: !Backend.clipboardImageSource
                     text: Backend.clipboardContentsLoading ? "Loading…" : Backend.clipboardContents
                     textFormat: Text.PlainText
                     wrapMode: Text.Wrap
                     color: Backend.clipboardContentsLoading ? Theme.muted : Theme.foreground
                     font.pixelSize: 10
+                }
+
+                Image {
+                    anchors.fill: parent
+                    visible: !!Backend.clipboardImageSource
+                    source: Backend.clipboardImageSource
+                    fillMode: Image.PreserveAspectFit
+                    asynchronous: true
                 }
 
             }
