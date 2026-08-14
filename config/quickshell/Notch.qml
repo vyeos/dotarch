@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Shapes
 import Quickshell
 import Quickshell.Hyprland
+import Quickshell.Services.UPower
 import qs.components
 import qs.panels
 
@@ -20,6 +21,7 @@ PanelWindow {
     readonly property real targetVisualWidth: ShellState.targetWidth + cornerWing * 2
     readonly property real targetVisualHeight: ShellState.expanded ? panelContentHeight + requestedTopPadding + requestedBottomPadding : collapsedHeight
     readonly property real panelContentHeight: ShellState.expanded ? Math.max(ShellState.panelHeights[ShellState.panel] || 0, requestedPanel ? requestedPanel.implicitHeight : 0) : 0
+    readonly property bool batteryLow: UPower.displayDevice && UPower.displayDevice.isLaptopBattery && UPower.displayDevice.percentage < 0.2
     property bool contentRevealed: false
     property bool clockRevealed: true
     property string displayedPanel: "control"
@@ -216,6 +218,80 @@ PanelWindow {
                     control2X: rightShoulderPath.size * 0.448
                     control2Y: 0
                     x: rightShoulderPath.size
+                    y: 0
+                }
+
+            }
+
+        }
+
+        Shape {
+            id: batteryWarningOutline
+
+            x: 1
+            width: parent.width - 2
+            height: parent.height - 1
+            visible: window.batteryLow
+            preferredRendererType: Shape.CurveRenderer
+
+            ShapePath {
+                id: batteryWarningOutlinePath
+
+                readonly property real wing: window.cornerWing - 1
+                readonly property real cornerRadius: Math.min(Theme.radius, batteryWarningOutline.height - wing)
+
+                strokeWidth: 2
+                strokeColor: Theme.red
+                fillColor: "transparent"
+                capStyle: ShapePath.RoundCap
+                joinStyle: ShapePath.RoundJoin
+                startX: 0
+                startY: 0
+
+                PathCubic {
+                    control1X: batteryWarningOutlinePath.wing * 0.448
+                    control1Y: 0
+                    control2X: batteryWarningOutlinePath.wing
+                    control2Y: batteryWarningOutlinePath.wing * 0.448
+                    x: batteryWarningOutlinePath.wing
+                    y: batteryWarningOutlinePath.wing
+                }
+
+                PathLine {
+                    x: batteryWarningOutlinePath.wing
+                    y: batteryWarningOutline.height - batteryWarningOutlinePath.cornerRadius
+                }
+
+                PathArc {
+                    x: batteryWarningOutlinePath.wing + batteryWarningOutlinePath.cornerRadius
+                    y: batteryWarningOutline.height
+                    radiusX: batteryWarningOutlinePath.cornerRadius
+                    radiusY: batteryWarningOutlinePath.cornerRadius
+                }
+
+                PathLine {
+                    x: batteryWarningOutline.width - batteryWarningOutlinePath.wing - batteryWarningOutlinePath.cornerRadius
+                    y: batteryWarningOutline.height
+                }
+
+                PathArc {
+                    x: batteryWarningOutline.width - batteryWarningOutlinePath.wing
+                    y: batteryWarningOutline.height - batteryWarningOutlinePath.cornerRadius
+                    radiusX: batteryWarningOutlinePath.cornerRadius
+                    radiusY: batteryWarningOutlinePath.cornerRadius
+                }
+
+                PathLine {
+                    x: batteryWarningOutline.width - batteryWarningOutlinePath.wing
+                    y: batteryWarningOutlinePath.wing
+                }
+
+                PathCubic {
+                    control1X: batteryWarningOutline.width - batteryWarningOutlinePath.wing
+                    control1Y: batteryWarningOutlinePath.wing * 0.448
+                    control2X: batteryWarningOutline.width - batteryWarningOutlinePath.wing * 0.448
+                    control2Y: 0
+                    x: batteryWarningOutline.width
                     y: 0
                 }
 
