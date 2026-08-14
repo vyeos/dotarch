@@ -62,3 +62,7 @@ zoxide init fish | source
 # >>> Codex installer >>>
 export PATH="$HOME/.local/bin:$PATH"
 # <<< Codex installer <<<
+
+# bun
+set --export BUN_INSTALL "$HOME/.bun"
+set --export PATH $BUN_INSTALL/bin $PATH
