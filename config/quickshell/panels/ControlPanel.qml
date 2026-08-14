@@ -711,6 +711,7 @@ FocusScope {
                     color: Theme.foreground
                     font.family: Theme.fontFamily
                     font.pixelSize: 10
+                    verticalAlignment: TextInput.AlignVCenter
                     echoMode: TextInput.Password
                     passwordCharacter: "•"
                     activeFocusOnTab: visible
