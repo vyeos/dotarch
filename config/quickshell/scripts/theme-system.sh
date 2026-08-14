@@ -9,6 +9,7 @@ state_dir=${XDG_STATE_HOME:-"$HOME/.local/state"}/vyeos
 # PICTURES to $HOME when XDG user directories have not been configured.
 pictures_dir=${XDG_PICTURES_DIR:-"$HOME/Pictures"}
 wallpaper_root=$pictures_dir/Wallpapers
+sddm_cache_dir=${VYEOS_SDDM_CACHE_DIR:-/var/cache/vyeos-sddm}
 
 die() {
   printf 'theme-system: %s\n' "$*" >&2
@@ -58,6 +59,78 @@ open_wallpaper_folder() {
   directory=$wallpaper_root/$slug
   mkdir -p "$directory"
   xdg-open "$directory" >/dev/null 2>&1
+}
+
+wallpaper_for_theme() {
+  local slug=$1 directory saved=
+  directory=$wallpaper_root/$slug
+  if [[ -s $state_dir/wallpapers/$slug ]]; then
+    IFS= read -r saved < "$state_dir/wallpapers/$slug"
+  elif [[ -s $state_dir/current-wallpaper ]]; then
+    IFS= read -r saved < "$state_dir/current-wallpaper"
+  fi
+  if [[ -n $saved && -f $saved && $(realpath -- "$saved") == "$(realpath -m -- "$directory")/"* ]]; then
+    printf '%s\n' "$saved"
+    return
+  fi
+  find "$directory" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' -o -iname '*.gif' \) -print -quit 2>/dev/null || true
+}
+
+write_sddm_theme() {
+  local file=$1 output=$2 use_wallpaper=$3
+  local bg_dim bg0 bg1 bg2 bg3 foreground primary yellow red
+  bg_dim=$(jq -er '.colors.bg_dim' "$file")
+  bg0=$(jq -er '.colors.bg0' "$file")
+  bg1=$(jq -er '.colors.bg1' "$file")
+  bg2=$(jq -er '.colors.bg2' "$file")
+  bg3=$(jq -er '.colors.bg3' "$file")
+  foreground=$(jq -er '.colors.foreground' "$file")
+  primary=$(jq -er '.colors.primary' "$file")
+  yellow=$(jq -er '.colors.yellow' "$file")
+  red=$(jq -er '.colors.red' "$file")
+
+  {
+    printf '[LockScreen]\nbackground = "vyeos-wallpaper.jpg"\nuse-background-color = %s\nbackground-color = "%s"\nblur = 28\nbrightness = -0.12\n\n' "$([[ $use_wallpaper == true ]] && printf false || printf true)" "$bg0"
+    printf '[LockScreen.Clock]\ncolor = "%s"\n\n[LockScreen.Date]\ncolor = "%s"\n\n' "$foreground" "$foreground"
+    printf '[LockScreen.Message]\ncolor = "%s"\n\n' "$foreground"
+    printf '[LoginScreen]\nbackground = "vyeos-wallpaper.jpg"\nuse-background-color = %s\nbackground-color = "%s"\nblur = 28\nbrightness = -0.12\n\n' "$([[ $use_wallpaper == true ]] && printf false || printf true)" "$bg0"
+    printf '[LoginScreen.LoginArea.Avatar]\nactive-border-color = "%s"\ninactive-border-color = "%s"\n\n' "$primary" "$primary"
+    printf '[LoginScreen.LoginArea.Username]\ncolor = "%s"\n\n' "$foreground"
+    printf '[LoginScreen.LoginArea.PasswordInput]\ncontent-color = "%s"\nbackground-color = "%s"\nborder-color = "%s"\n\n' "$foreground" "$bg1" "$primary"
+    printf '[LoginScreen.LoginArea.LoginButton]\nbackground-color = "%s"\nactive-background-color = "%s"\ncontent-color = "%s"\nactive-content-color = "%s"\nborder-color = "%s"\n\n' "$bg1" "$primary" "$primary" "$bg_dim" "$primary"
+    printf '[LoginScreen.LoginArea.Spinner]\ncolor = "%s"\n\n' "$foreground"
+    printf '[LoginScreen.LoginArea.WarningMessage]\nnormal-color = "%s"\nwarning-color = "%s"\nerror-color = "%s"\n\n' "$foreground" "$yellow" "$red"
+    printf '[LoginScreen.MenuArea.Popups]\nbackground-color = "%s"\nactive-option-background-color = "%s"\ncontent-color = "%s"\nactive-content-color = "%s"\nborder-color = "%s"\n\n' "$bg1" "$bg2" "$foreground" "$primary" "$primary"
+    local section
+    for section in Session Layout Keyboard Power; do
+      printf '[LoginScreen.MenuArea.%s]\nbackground-color = "%s"\ncontent-color = "%s"\nactive-content-color = "%s"\n\n' "$section" "$primary" "$foreground" "$bg_dim"
+    done
+    printf '[LoginScreen.VirtualKeyboard]\nbackground-color = "%s"\nkey-content-color = "%s"\nkey-color = "%s"\nkey-active-background-color = "%s"\nselection-background-color = "%s"\nselection-content-color = "%s"\nprimary-color = "%s"\nborder-color = "%s"\n\n' "$bg1" "$foreground" "$bg2" "$primary" "$primary" "$bg_dim" "$primary" "$bg3"
+    printf '[Tooltips]\ncontent-color = "%s"\nbackground-color = "%s"\n' "$foreground" "$bg1"
+  } > "$output"
+}
+
+sync_sddm_theme() {
+  local file=$1 slug wallpaper config_tmp wallpaper_tmp use_wallpaper=false
+  [[ -d $sddm_cache_dir && -w $sddm_cache_dir ]] || return 0
+  slug=$(jq -er '.slug' "$file")
+  wallpaper=$(wallpaper_for_theme "$slug")
+
+  if [[ -n $wallpaper && -f $wallpaper ]] && command -v ffmpeg >/dev/null; then
+    wallpaper_tmp=$(mktemp "$sddm_cache_dir/.wallpaper.XXXXXX.jpg")
+    if ffmpeg -loglevel error -y -i "$wallpaper" -frames:v 1 -q:v 2 "$wallpaper_tmp"; then
+      mv -f -- "$wallpaper_tmp" "$sddm_cache_dir/vyeos-wallpaper.jpg"
+      use_wallpaper=true
+    else
+      rm -f -- "$wallpaper_tmp"
+    fi
+  fi
+
+  config_tmp=$(mktemp "$sddm_cache_dir/.theme.XXXXXX.conf")
+  write_sddm_theme "$file" "$config_tmp" "$use_wallpaper"
+  mv -f -- "$config_tmp" "$sddm_cache_dir/theme.conf.user"
+  chmod 644 "$sddm_cache_dir/theme.conf.user"
+  [[ ! -f $sddm_cache_dir/vyeos-wallpaper.jpg ]] || chmod 644 "$sddm_cache_dir/vyeos-wallpaper.jpg"
 }
 
 apply_folder_icons() {
@@ -243,6 +316,7 @@ HIGHLIGHTS
   ln -sfn -- "$cache_dir/gtk.css" "$HOME/.config/gtk-3.0/vyeos-theme.css"
   ln -sfn -- "$cache_dir/gtk.css" "$HOME/.config/gtk-4.0/vyeos-theme.css"
   gsettings set org.gnome.desktop.interface color-scheme "prefer-$appearance" >/dev/null 2>&1 || true
+  sync_sddm_theme "$file"
 }
 
 set_wallpaper() {
@@ -257,6 +331,7 @@ set_wallpaper() {
   printf '%s\n' "$resolved" > "$state_dir/current-wallpaper"
   mkdir -p "$state_dir/wallpapers"
   printf '%s\n' "$resolved" > "$state_dir/wallpapers/$slug"
+  sync_sddm_theme "$(theme_file "$slug")"
 }
 
 display_wallpaper() {

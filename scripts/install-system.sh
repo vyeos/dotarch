@@ -27,6 +27,8 @@ install_file "$system_root/sddm.conf.d/20-theme.conf" /etc/sddm.conf.d/20-theme.
 install_file "$system_root/NetworkManager/conf.d/20-dns.conf" /etc/NetworkManager/conf.d/20-dns.conf
 install_file "$system_root/systemd/zram-generator.conf" /etc/systemd/zram-generator.conf
 
+"$repo_root/scripts/install-sddm-theme.sh" "${SUDO_USER:-$(stat -c %U "$repo_root")}"
+
 systemctl disable iwd.service >/dev/null 2>&1 || true
 systemctl disable systemd-networkd.service >/dev/null 2>&1 || true
 systemctl enable sddm.service NetworkManager.service systemd-resolved.service bluetooth.service

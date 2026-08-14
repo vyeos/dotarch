@@ -61,9 +61,10 @@ user data.
 
 Seven bundled palettes—Catppuccin Mocha, Dracula, Everforest, Gruvbox Dark,
 Nord, Rosé Pine, and Tokyo Night—are generated from one JSON source of truth.
-A switch updates Quickshell, Hyprland, Hyprlock, Alacritty, GTK, Fish/eza,
-Papirus folder colors, and Neovim; Hyprland, Alacritty, and Quickshell reload
-immediately.
+A switch updates Quickshell, Hyprland, Hyprlock, SDDM, Alacritty, GTK,
+Fish/eza, Papirus folder colors, and Neovim; Hyprland, Alacritty, and
+Quickshell reload immediately. SDDM uses the same palette and a blurred static
+frame of the theme's selected wallpaper on the next login.
 
 ![Theme-aware wallpaper selector](docs/screenshots/wallpaper.webp)
 
@@ -220,6 +221,10 @@ The hardware shortcuts remain available while the session is locked.
 4. Run `scripts/install-dotfiles.sh`. It symlinks the configuration, creates the
    wallpaper folders, downloads the upstream `alacritty-theme` collection, and
    moves replaced files to `~/.dotfiles-backups/<timestamp>/`.
+
+On an existing installation, apply only the new SDDM integration with
+`sudo scripts/install-sddm-theme.sh`; the full system installer also runs this
+step automatically.
 
 ## Machine-specific notes
 
