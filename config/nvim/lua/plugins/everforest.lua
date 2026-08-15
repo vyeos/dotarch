@@ -18,6 +18,7 @@ return {
         local generated = vim.fn.expand("~/.cache/vyeos/theme/nvim.lua")
         if vim.uv.fs_stat(generated) then
           dofile(generated)
+          vim.api.nvim_exec_autocmds("ColorScheme", { modeline = false })
         else
           vim.cmd.colorscheme("everforest")
         end
