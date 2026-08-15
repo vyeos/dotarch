@@ -111,18 +111,25 @@ write_sddm_theme() {
 }
 
 sync_sddm_theme() {
-  local file=$1 slug wallpaper config_tmp wallpaper_tmp use_wallpaper=false
+  local file=$1 slug wallpaper config_tmp wallpaper_tmp source_key cached_source= use_wallpaper=false
   [[ -d $sddm_cache_dir && -w $sddm_cache_dir ]] || return 0
   slug=$(jq -er '.slug' "$file")
   wallpaper=$(wallpaper_for_theme "$slug")
 
   if [[ -n $wallpaper && -f $wallpaper ]] && command -v ffmpeg >/dev/null; then
-    wallpaper_tmp=$(mktemp "$sddm_cache_dir/.wallpaper.XXXXXX.jpg")
-    if ffmpeg -loglevel error -y -i "$wallpaper" -frames:v 1 -q:v 2 "$wallpaper_tmp"; then
-      mv -f -- "$wallpaper_tmp" "$sddm_cache_dir/vyeos-wallpaper.jpg"
+    source_key="$(realpath -- "$wallpaper")|$(stat -c '%s:%Y' -- "$wallpaper")"
+    [[ ! -s $sddm_cache_dir/wallpaper-source ]] || IFS= read -r cached_source < "$sddm_cache_dir/wallpaper-source"
+    if [[ $source_key == "$cached_source" && -s $sddm_cache_dir/vyeos-wallpaper.jpg ]]; then
       use_wallpaper=true
     else
-      rm -f -- "$wallpaper_tmp"
+      wallpaper_tmp=$(mktemp "$sddm_cache_dir/.wallpaper.XXXXXX.jpg")
+      if ffmpeg -loglevel error -y -i "$wallpaper" -frames:v 1 -q:v 2 "$wallpaper_tmp"; then
+        mv -f -- "$wallpaper_tmp" "$sddm_cache_dir/vyeos-wallpaper.jpg"
+        printf '%s\n' "$source_key" > "$sddm_cache_dir/wallpaper-source"
+        use_wallpaper=true
+      else
+        rm -f -- "$wallpaper_tmp"
+      fi
     fi
   fi
 
@@ -133,43 +140,58 @@ sync_sddm_theme() {
   [[ ! -f $sddm_cache_dir/vyeos-wallpaper.jpg ]] || chmod 644 "$sddm_cache_dir/vyeos-wallpaper.jpg"
 }
 
+sync_sddm_latest() {
+  [[ -d $sddm_cache_dir && -w $sddm_cache_dir ]] || return 0
+  exec 9>"$sddm_cache_dir/sync.lock"
+  flock 9
+  sync_sddm_theme "$(theme_file "$(current_theme)")"
+}
+
+schedule_sddm_sync() {
+  [[ -d $sddm_cache_dir && -w $sddm_cache_dir ]] || return 0
+  setsid -f "$0" sync-sddm-latest </dev/null >/dev/null 2>&1
+}
+
 apply_folder_icons() {
-  local file=$1 color source_root icon_root theme_name size source_dir target_dir source path name target
+  local file=$1 color source_root icon_root theme_name size source_dir target_dir source name target
   color=$(jq -er '.applications.folder_color // "blue"' "$file")
+  [[ $color =~ ^[A-Za-z0-9_-]+$ ]] || die "invalid folder color: $color"
   source_root=/usr/share/icons/Papirus-Dark
   icon_root=${XDG_DATA_HOME:-"$HOME/.local/share"}/icons
-  theme_name=Vyeos-Papirus-Dark
+  theme_name=Vyeos-Papirus-Dark-$color
   [[ -d $source_root ]] || return 0
 
-  mkdir -p "$icon_root/$theme_name"
-  {
-    printf '[Icon Theme]\nName=Vyeos Papirus Dark\nComment=Theme-managed Papirus folder colors\n'
-    printf 'Inherits=Papirus-Dark,hicolor\nDirectories='
-    local separator=
-    for size in 16 22 24 32 48 64; do
-      printf '%s%sx%s/places' "$separator" "$size" "$size"
-      separator=,
-    done
-    printf '\n\n'
-    for size in 16 22 24 32 48 64; do
-      printf '[%sx%s/places]\nContext=Places\nSize=%s\nType=Fixed\n\n' "$size" "$size" "$size"
-    done
-  } > "$icon_root/$theme_name/index.theme"
+  if [[ ! -f $icon_root/$theme_name/.complete ]]; then
+    mkdir -p "$icon_root/$theme_name"
+    {
+      printf '[Icon Theme]\nName=Vyeos Papirus Dark (%s)\nComment=Theme-managed Papirus folder colors\n' "$color"
+      printf 'Inherits=Papirus-Dark,hicolor\nDirectories='
+      local separator=
+      for size in 16 22 24 32 48 64; do
+        printf '%s%sx%s/places' "$separator" "$size" "$size"
+        separator=,
+      done
+      printf '\n\n'
+      for size in 16 22 24 32 48 64; do
+        printf '[%sx%s/places]\nContext=Places\nSize=%s\nType=Fixed\n\n' "$size" "$size" "$size"
+      done
+    } > "$icon_root/$theme_name/index.theme"
 
-  for size in 16 22 24 32 48 64; do
-    source_dir=$(realpath -- "$source_root/${size}x${size}/places")
-    target_dir=$icon_root/$theme_name/${size}x${size}/places
-    mkdir -p "$target_dir"
-    find "$target_dir" -mindepth 1 -maxdepth 1 -delete
-    while IFS= read -r -d '' source; do
-      [[ -L $source ]] && continue
-      name=$(basename "$source")
-      cp -- "$source" "$target_dir/$name"
-      target=${name/-$color/}
-      ln -sfn -- "$name" "$target_dir/$target"
-    done < <(find -L "$source_dir" -maxdepth 1 -type f \( -name "folder-$color*.svg" -o -name "user-$color*.svg" \) -print0)
-  done
-  gtk-update-icon-cache -qf "$icon_root/$theme_name" >/dev/null 2>&1 || true
+    for size in 16 22 24 32 48 64; do
+      source_dir=$(realpath -- "$source_root/${size}x${size}/places")
+      target_dir=$icon_root/$theme_name/${size}x${size}/places
+      mkdir -p "$target_dir"
+      while IFS= read -r -d '' source; do
+        [[ -L $source ]] && continue
+        name=$(basename "$source")
+        cp -- "$source" "$target_dir/$name"
+        target=${name/-$color/}
+        ln -sfn -- "$name" "$target_dir/$target"
+      done < <(find -L "$source_dir" -maxdepth 1 -type f \( -name "folder-$color*.svg" -o -name "user-$color*.svg" \) -print0)
+    done
+    gtk-update-icon-cache -qf "$icon_root/$theme_name" >/dev/null 2>&1 || true
+    : > "$icon_root/$theme_name/.complete"
+  fi
   gsettings set org.gnome.desktop.interface icon-theme "$theme_name" >/dev/null 2>&1 || true
 }
 
@@ -316,11 +338,10 @@ HIGHLIGHTS
   ln -sfn -- "$cache_dir/gtk.css" "$HOME/.config/gtk-3.0/vyeos-theme.css"
   ln -sfn -- "$cache_dir/gtk.css" "$HOME/.config/gtk-4.0/vyeos-theme.css"
   gsettings set org.gnome.desktop.interface color-scheme "prefer-$appearance" >/dev/null 2>&1 || true
-  sync_sddm_theme "$file"
 }
 
 set_wallpaper() {
-  local path=${1:?wallpaper path required} slug directory resolved
+  local path=${1:?wallpaper path required} sync=${2:-true} slug directory resolved
   slug=$(current_theme)
   directory=$wallpaper_root/$slug
   [[ -f $path ]] || die "wallpaper does not exist: $path"
@@ -331,13 +352,18 @@ set_wallpaper() {
   printf '%s\n' "$resolved" > "$state_dir/current-wallpaper"
   mkdir -p "$state_dir/wallpapers"
   printf '%s\n' "$resolved" > "$state_dir/wallpapers/$slug"
-  sync_sddm_theme "$(theme_file "$slug")"
+  [[ $sync != true ]] || schedule_sddm_sync
 }
 
 display_wallpaper() {
-  awww img "$1" \
+  local outputs= arguments=()
+  if command -v hyprctl >/dev/null && command -v jq >/dev/null; then
+    outputs=$(hyprctl monitors -j 2>/dev/null | jq -r 'map(.name) | join(",")' 2>/dev/null || true)
+    [[ -z $outputs ]] || arguments+=(--outputs "$outputs")
+  fi
+  awww img "$1" "${arguments[@]}" \
     --transition-type center \
-    --transition-duration 1.15 \
+    --transition-duration 0.45 \
     --transition-fps 60
 }
 
@@ -357,7 +383,7 @@ restore_wallpaper() {
   fi
   first=$(find "$directory" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' -o -iname '*.gif' \) -print -quit 2>/dev/null || true)
   if [[ -n $first ]]; then
-    set_wallpaper "$first"
+    set_wallpaper "$first" false
   else
     awww clear "$(jq -r '.colors.bg0[1:]' "$(theme_file "$slug")")" >/dev/null 2>&1 || true
   fi
@@ -374,6 +400,7 @@ apply_theme() {
   hyprctl reload >/dev/null 2>&1 || true
   qs ipc call theme reload >/dev/null 2>&1 || true
   restore_wallpaper || true
+  schedule_sddm_sync
   if $nautilus_was_running; then
     nautilus -q >/dev/null 2>&1 || true
     setsid -f nautilus >/dev/null 2>&1 || true
@@ -390,6 +417,7 @@ case ${1:-} in
   open-wallpapers) open_wallpaper_folder "${2:-}" ;;
   wallpaper) set_wallpaper "${2:?wallpaper path required}" ;;
   restore-wallpaper) restore_wallpaper ;;
+  sync-sddm-latest) sync_sddm_latest ;;
   generate) write_generated_files "$(theme_file "${2:-$(current_theme)}")" ;;
   *) die "usage: $0 {apply THEME|current|current-json|list|wallpapers [THEME]|open-wallpapers [THEME]|wallpaper PATH|restore-wallpaper|generate [THEME]}" ;;
 esac

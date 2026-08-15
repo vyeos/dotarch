@@ -50,7 +50,7 @@ mkdir -p "$HOME/.local/bin"
 link_file "$repo_root/scripts/theme-switch" "$HOME/.local/bin/theme-switch"
 link_file "$repo_root/scripts/wallpaper-set" "$HOME/.local/bin/wallpaper-set"
 
-for theme in everforest catppuccin-mocha gruvbox-dark nord tokyo-night rose-pine dracula; do
+for theme in everforest catppuccin-mocha gruvbox nord tokyo-night rose-pine dracula; do
   mkdir -p "${XDG_PICTURES_DIR:-$HOME/Pictures}/Wallpapers/$theme"
 done
 
