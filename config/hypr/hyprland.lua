@@ -262,6 +262,15 @@ hl.device({
 local mainMod = "SUPER" -- Sets "Windows" key as main modifier
 local hyper = "MOD3" -- Caps Lock is remapped to a Hyper key (caps:hyper)
 
+-- Lock and power down every display when the laptop lid closes. logind is
+-- configured to leave lid handling to Hyprland, avoiding duplicate actions.
+hl.bind(
+	"switch:on:Lid Switch",
+	hl.dsp.exec_cmd("loginctl lock-session; sleep 1; hyprctl dispatch dpms off"),
+	{ locked = true }
+)
+hl.bind("switch:off:Lid Switch", hl.dsp.exec_cmd("hyprctl dispatch dpms on"), { locked = true })
+
 -- Quickshell notch. The IPC target keeps compositor binds independent of UI internals.
 hl.bind(hyper .. " + C", hl.dsp.exec_cmd("qs ipc call notch toggle control"))
 hl.bind(mainMod .. " + SPACE", hl.dsp.exec_cmd("qs ipc call notch toggle launcher"))

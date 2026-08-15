@@ -26,6 +26,7 @@ install_file "$system_root/sddm.conf.d/10-wayland.conf" /etc/sddm.conf.d/10-wayl
 install_file "$system_root/sddm.conf.d/20-theme.conf" /etc/sddm.conf.d/20-theme.conf
 install_file "$system_root/NetworkManager/conf.d/20-dns.conf" /etc/NetworkManager/conf.d/20-dns.conf
 install_file "$system_root/systemd/zram-generator.conf" /etc/systemd/zram-generator.conf
+install_file "$system_root/systemd/logind.conf.d/20-power-management.conf" /etc/systemd/logind.conf.d/20-power-management.conf
 
 "$repo_root/scripts/install-sddm-theme.sh" "${SUDO_USER:-$(stat -c %U "$repo_root")}"
 
