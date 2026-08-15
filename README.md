@@ -59,8 +59,8 @@ user data.
 
 ![Desktop theme selector](docs/screenshots/theme.webp)
 
-Seven bundled palettes—Catppuccin Mocha, Dracula, Everforest, Gruvbox Dark,
-Nord, Rosé Pine, and Tokyo Night—are generated from one JSON source of truth.
+Six bundled palettes—Catppuccin Mocha, Everforest, Gruvbox Dark, Nord, Rosé
+Pine, and Tokyo Night—are generated from one JSON source of truth.
 A switch updates Quickshell, Hyprland, Hyprlock, SDDM, Alacritty, GTK,
 Fish/eza, Papirus folder colors, and Neovim; Hyprland, Alacritty, and
 Quickshell reload immediately. SDDM uses the same palette and a blurred static
