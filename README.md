@@ -121,7 +121,8 @@ and a LazyVim-based Neovim setup.
 | --- | --- |
 | `Hyper+C` | Toggle control center |
 | `Super+Space` | Toggle app launcher / calculator |
-| `Super+V` | Toggle clipboard history |
+| `Super+V` | Toggle the focused split between horizontal and vertical |
+| `Super+Shift+V` | Toggle clipboard history |
 | `Hyper+/` | Toggle todo manager |
 | `Hyper+N` | Toggle quick notes |
 | `Super+Shift+T` | Toggle desktop theme selector |

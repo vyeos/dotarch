@@ -8,8 +8,10 @@ application/vnd.openxmlformats-officedocument.wordprocessingml.document=onlyoffi
 image/jpeg=org.gnome.Loupe.desktop
 x-scheme-handler/t3code=t3code-url-handler.desktop
 image/png=org.gnome.Loupe.desktop
+image/gif=org.gnome.Loupe.desktop
 
 [Added Associations]
 application/vnd.openxmlformats-officedocument.wordprocessingml.document=onlyoffice-desktopeditors.desktop;
 image/jpeg=org.gnome.Loupe.desktop;
 image/png=org.gnome.Loupe.desktop;
+image/gif=org.gnome.Loupe.desktop;
