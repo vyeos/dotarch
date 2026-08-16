@@ -150,23 +150,7 @@ FocusScope {
                         cache: true
                     }
 
-                    Rectangle {
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.bottom: parent.bottom
-                        height: 25
-                        color: "#b0000000"
-                        ShellText {
-                            anchors.fill: parent
-                            anchors.leftMargin: 7
-                            anchors.rightMargin: 7
-                            verticalAlignment: Text.AlignVCenter
-                            text: wallpaperTile.modelData.name
-                            elide: Text.ElideMiddle
-                            font.pixelSize: 9
-                            color: "white"
-                        }
-                    }
+                    
                 }
 
                 MouseArea {
