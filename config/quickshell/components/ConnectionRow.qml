@@ -10,8 +10,15 @@ FocusScope {
     property string actionText: "Connect"
     property bool active: false
     property bool busy: false
+    property int titleFontSize: 10
+    property int subtitleFontSize: 8
+    property int actionFontSize: 8
+    property bool secondaryActionVisible: false
+    property string secondaryActionIcon: "󰆴"
+    property string secondaryActionName: "Remove"
 
     signal clicked()
+    signal secondaryClicked()
 
     implicitHeight: 42
     activeFocusOnTab: true
@@ -68,7 +75,7 @@ FocusScope {
             width: parent.width
             text: root.title
             elide: Text.ElideRight
-            font.pixelSize: 10
+            font.pixelSize: root.titleFontSize
             font.weight: Font.DemiBold
         }
 
@@ -77,7 +84,7 @@ FocusScope {
             text: root.subtitle
             color: Theme.muted
             elide: Text.ElideRight
-            font.pixelSize: 8
+            font.pixelSize: root.subtitleFontSize
         }
 
     }
@@ -85,12 +92,12 @@ FocusScope {
     ShellText {
         id: actionLabel
 
-        anchors.right: parent.right
-        anchors.rightMargin: 10
+        anchors.right: secondaryAction.visible ? secondaryAction.left : parent.right
+        anchors.rightMargin: secondaryAction.visible ? 5 : 10
         anchors.verticalCenter: parent.verticalCenter
         text: root.busy ? "Working…" : root.actionText
         color: root.active ? Theme.primary : Theme.aqua
-        font.pixelSize: 8
+        font.pixelSize: root.actionFontSize
         font.weight: Font.Bold
     }
 
@@ -101,6 +108,45 @@ FocusScope {
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: root.clicked()
+    }
+
+    FocusScope {
+        id: secondaryAction
+
+        anchors.right: parent.right
+        anchors.rightMargin: 5
+        anchors.verticalCenter: parent.verticalCenter
+        width: 28
+        height: 28
+        visible: root.secondaryActionVisible
+        activeFocusOnTab: visible
+        Keys.onReturnPressed: root.secondaryClicked()
+        Keys.onEnterPressed: root.secondaryClicked()
+        Keys.onSpacePressed: root.secondaryClicked()
+        Accessible.role: Accessible.Button
+        Accessible.name: root.secondaryActionName
+
+        Rectangle {
+            anchors.fill: parent
+            radius: Theme.radiusSmall
+            color: secondaryPointer.containsMouse || secondaryAction.activeFocus ? Theme.bg2 : "transparent"
+        }
+
+        ShellText {
+            anchors.centerIn: parent
+            text: root.secondaryActionIcon
+            color: secondaryPointer.containsMouse || secondaryAction.activeFocus ? Theme.red : Theme.mutedDark
+            font.pixelSize: 10
+        }
+
+        MouseArea {
+            id: secondaryPointer
+
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: root.secondaryClicked()
+        }
     }
 
 }

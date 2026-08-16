@@ -29,6 +29,8 @@ FocusScope {
     readonly property var connectedWifi: wifiNetworks.find((network) => {
         return network.connected;
     }) || null
+    readonly property var knownWifiNetworks: wifiNetworks.filter((network) => network.known)
+    readonly property var availableWifiNetworks: wifiNetworks.filter((network) => !network.known)
     readonly property var audioSinks: Pipewire.nodes.values.filter((node) => {
         return node.isSink && !node.isStream && node.audio;
     })
@@ -43,6 +45,8 @@ FocusScope {
 
         return (left.name || left.deviceName).localeCompare(right.name || right.deviceName);
     }) : []
+    readonly property var knownBluetoothDevices: bluetoothDevices.filter((device) => device.paired || device.bonded)
+    readonly property var availableBluetoothDevices: bluetoothDevices.filter((device) => !device.paired && !device.bonded)
     readonly property var connectedDevices: adapter ? adapter.devices.values.filter((device) => {
         return device.connected;
     }) : []
@@ -398,21 +402,6 @@ FocusScope {
             }
 
             ActionTile {
-                id: audioTile
-
-                width: (parent.width - 14) / 3
-                icon: root.sink && root.sink.audio && root.sink.audio.muted ? "󰝟" : "󰕾"
-                title: "Audio"
-                subtitle: root.sink ? (root.sink.description || root.sink.nickname || "Default output") : "No output"
-                active: root.sink && root.sink.audio && !root.sink.audio.muted
-                expandable: true
-                expanded: root.expandedSection === "audio"
-                detailAccessibleName: "Show sound outputs"
-                onClicked: root.toggleAudio()
-                onDetailClicked: root.toggleSection("audio")
-            }
-
-            ActionTile {
                 id: bluetoothTile
 
                 width: (parent.width - 14) / 3
@@ -425,6 +414,21 @@ FocusScope {
                 detailAccessibleName: "Show Bluetooth devices"
                 onClicked: root.toggleBluetooth()
                 onDetailClicked: root.toggleSection("bluetooth")
+            }
+
+            ActionTile {
+                id: audioTile
+
+                width: (parent.width - 14) / 3
+                icon: root.sink && root.sink.audio && root.sink.audio.muted ? "󰝟" : "󰕾"
+                title: "Audio"
+                subtitle: root.sink ? (root.sink.description || root.sink.nickname || "Default output") : "No output"
+                active: root.sink && root.sink.audio && !root.sink.audio.muted
+                expandable: true
+                expanded: root.expandedSection === "audio"
+                detailAccessibleName: "Show sound outputs"
+                onClicked: root.toggleAudio()
+                onDetailClicked: root.toggleSection("audio")
             }
 
         }
@@ -522,7 +526,7 @@ FocusScope {
                     ShellText {
                         width: parent.width
                         text: root.displayedSection === "wifi" ? "Wi-Fi networks" : (root.displayedSection === "audio" ? "Sound output" : (root.displayedSection === "nightlight" ? ShellState.nightLightTemperature + " K" : "Bluetooth devices"))
-                        font.pixelSize: 10
+                        font.pixelSize: 12
                         font.weight: Font.Bold
                     }
 
@@ -543,7 +547,7 @@ FocusScope {
                         color: root.wifiError && root.displayedSection === "wifi" ? Theme.red : Theme.muted
                         visible: text.length > 0
                         elide: Text.ElideRight
-                        font.pixelSize: 8
+                        font.pixelSize: 10
                     }
 
                 }
@@ -556,6 +560,7 @@ FocusScope {
                     anchors.verticalCenter: parent.verticalCenter
                     width: 25
                     height: 25
+                    visible: root.displayedSection === "audio" || root.displayedSection === "nightlight"
                     icon: root.displayedSection === "audio" ? (root.sink && root.sink.audio && root.sink.audio.muted ? "󰝟" : "󰕾") : "󰐥"
                     accessibleName: {
                         if (root.displayedSection === "wifi")
@@ -633,8 +638,8 @@ FocusScope {
                 onMoved: (value) => Backend.setNightLightTemperature(2500 + value * 3500)
             }
 
-            ListView {
-                id: wifiList
+            Row {
+                id: wifiLists
 
                 anchors.left: parent.left
                 anchors.right: parent.right
@@ -645,44 +650,82 @@ FocusScope {
                 anchors.topMargin: 5
                 anchors.bottomMargin: wifiPasswordRow.height > 0 ? 5 : 0
                 visible: root.displayedSection === "wifi"
-                clip: true
                 spacing: 4
-                model: root.wifiNetworks
 
-                WheelHandler {
-                    target: null
-                    onWheel: (event) => root.scrollDetailList(wifiList, event)
-                }
-
-                delegate: ConnectionRow {
+                component WifiDelegate: ConnectionRow {
                     required property var modelData
+                    readonly property var network: modelData
 
-                    width: wifiList.width
-                    icon: root.wifiSignalIcon(modelData.signalStrength)
-                    title: modelData.name
-                    subtitle: root.wifiSecurityLabel(modelData.security) + "  ·  " + root.wifiSignalPercent(modelData.signalStrength) + "%"
-                    active: modelData.connected
-                    busy: modelData.stateChanging
-                    actionText: modelData.connected ? "Disconnect" : (!modelData.known && root.wifiUsesPsk(modelData.security) ? "Password" : "Connect")
-                    onClicked: root.selectWifi(modelData)
+                    width: ListView.view.width
+                    height: 42
+                    icon: root.wifiSignalIcon(network.signalStrength)
+                    title: network.name
+                    subtitle: root.wifiSecurityLabel(network.security) + "  ·  " + root.wifiSignalPercent(network.signalStrength) + "%"
+                    titleFontSize: 11
+                    subtitleFontSize: 9
+                    actionFontSize: 9
+                    active: network.connected
+                    busy: network.stateChanging
+                    actionText: network.connected ? "Disconnect" : (!network.known && root.wifiUsesPsk(network.security) ? "Password" : "Connect")
+                    secondaryActionVisible: network.known
+                    secondaryActionName: "Forget " + network.name
+                    onClicked: root.selectWifi(network)
+                    onSecondaryClicked: {
+                        if (root.pendingWifiNetwork === network) {
+                            root.pendingWifiNetwork = null;
+                            wifiPasswordInput.clear();
+                        }
+                        network.forget();
+                    }
 
                     Connections {
                         function onConnectionFailed(reason) {
-                            root.wifiConnectionFailed(modelData, reason);
+                            root.wifiConnectionFailed(network, reason);
                         }
 
                         function onConnectedChanged() {
-                            if (modelData.connected) {
+                            if (network.connected) {
                                 root.wifiError = "";
                                 root.pendingWifiNetwork = null;
                                 wifiPasswordInput.clear();
                             }
                         }
 
-                        target: modelData
+                        target: network
                     }
                 }
 
+                ListView {
+                    id: knownWifiList
+
+                    width: (parent.width - parent.spacing) / 2
+                    height: parent.height
+                    clip: true
+                    spacing: 4
+                    model: root.knownWifiNetworks
+                    delegate: WifiDelegate {}
+
+                    WheelHandler {
+                        target: null
+                        onWheel: (event) => root.scrollDetailList(knownWifiList, event)
+                    }
+                }
+
+                ListView {
+                    id: availableWifiList
+
+                    width: (parent.width - parent.spacing) / 2
+                    height: parent.height
+                    clip: true
+                    spacing: 4
+                    model: root.availableWifiNetworks
+                    delegate: WifiDelegate {}
+
+                    WheelHandler {
+                        target: null
+                        onWheel: (event) => root.scrollDetailList(availableWifiList, event)
+                    }
+                }
             }
 
             Rectangle {
@@ -793,8 +836,8 @@ FocusScope {
 
             }
 
-            ListView {
-                id: bluetoothList
+            Row {
+                id: bluetoothLists
 
                 anchors.left: parent.left
                 anchors.right: parent.right
@@ -804,28 +847,60 @@ FocusScope {
                 anchors.topMargin: 5
                 anchors.bottomMargin: 0
                 visible: root.displayedSection === "bluetooth"
-                clip: true
                 spacing: 4
-                model: root.bluetoothDevices
 
-                WheelHandler {
-                    target: null
-                    onWheel: (event) => root.scrollDetailList(bluetoothList, event)
-                }
-
-                delegate: ConnectionRow {
+                component BluetoothDelegate: ConnectionRow {
                     required property var modelData
+                    readonly property var device: modelData
 
-                    width: bluetoothList.width
-                    icon: root.bluetoothIcon(modelData)
-                    title: modelData.name || modelData.deviceName || modelData.address
-                    subtitle: modelData.batteryAvailable ? "Battery " + Math.round(modelData.battery * 100) + "%" : (modelData.paired ? "Paired" : "Available")
-                    active: modelData.connected
-                    busy: modelData.pairing || modelData.state === BluetoothDeviceState.Connecting || modelData.state === BluetoothDeviceState.Disconnecting
-                    actionText: modelData.connected ? "Disconnect" : (modelData.paired || modelData.bonded ? "Connect" : "Pair")
-                    onClicked: root.activateBluetoothDevice(modelData)
+                    width: ListView.view.width
+                    height: 42
+                    icon: root.bluetoothIcon(device)
+                    title: device.name || device.deviceName || device.address
+                    subtitle: device.batteryAvailable ? "Battery " + Math.round(device.battery * 100) + "%" : (device.paired ? "Paired" : "Available")
+                    titleFontSize: 11
+                    subtitleFontSize: 9
+                    actionFontSize: 9
+                    active: device.connected
+                    busy: device.pairing || device.state === BluetoothDeviceState.Connecting || device.state === BluetoothDeviceState.Disconnecting
+                    actionText: device.connected ? "Disconnect" : (device.paired || device.bonded ? "Connect" : "Pair")
+                    secondaryActionVisible: device.paired || device.bonded
+                    secondaryActionName: "Remove " + (device.name || device.deviceName || device.address)
+                    onClicked: root.activateBluetoothDevice(device)
+                    onSecondaryClicked: device.forget()
                 }
 
+                ListView {
+                    id: knownBluetoothList
+
+                    width: (parent.width - parent.spacing) / 2
+                    height: parent.height
+                    clip: true
+                    spacing: 4
+                    model: root.knownBluetoothDevices
+                    delegate: BluetoothDelegate {}
+
+                    WheelHandler {
+                        target: null
+                        onWheel: (event) => root.scrollDetailList(knownBluetoothList, event)
+                    }
+                }
+
+                ListView {
+                    id: availableBluetoothList
+
+                    width: (parent.width - parent.spacing) / 2
+                    height: parent.height
+                    clip: true
+                    spacing: 4
+                    model: root.availableBluetoothDevices
+                    delegate: BluetoothDelegate {}
+
+                    WheelHandler {
+                        target: null
+                        onWheel: (event) => root.scrollDetailList(availableBluetoothList, event)
+                    }
+                }
             }
 
             Behavior on opacity {
