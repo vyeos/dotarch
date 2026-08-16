@@ -31,7 +31,7 @@ FocusScope {
     }
 
     implicitWidth: 392
-    implicitHeight: 402
+    implicitHeight: 252
 
     Column {
         anchors.fill: parent

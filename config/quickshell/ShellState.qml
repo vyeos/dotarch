@@ -23,7 +23,7 @@ Singleton {
         "clipboard": 80,
         "todo": 87,
         "notes": 430,
-        "theme": 402,
+        "theme": 252,
         "wallpaper": 382,
         "capture": 208,
         "power": 56
