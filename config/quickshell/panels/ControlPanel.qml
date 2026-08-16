@@ -481,7 +481,7 @@ FocusScope {
             readonly property bool compactMode: audioMode || nightLightMode
             readonly property real availableHeight: root.height - y
 
-            x: audioMode ? audioTile.x + audioTile.width / 2 - width / 2 : 0
+            x: audioMode ? Math.max(0, Math.min(root.width - width, audioTile.x + audioTile.width / 2 - width / 2)) : 0
             y: systemActions.y + systemActions.height + content.spacing
             z: 20
             width: compactMode ? 320 : root.width
