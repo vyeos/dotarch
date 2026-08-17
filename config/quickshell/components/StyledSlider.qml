@@ -8,6 +8,7 @@ FocusScope {
     property bool filled: false
     property string icon: ""
     property string accessibleName: ""
+    property string valueText: ""
 
     signal moved(real value)
 
@@ -104,6 +105,8 @@ FocusScope {
         visible: root.filled
 
         Rectangle {
+            id: filledBar
+
             anchors.left: parent.left
             anchors.top: parent.top
             anchors.bottom: parent.bottom
@@ -111,6 +114,20 @@ FocusScope {
             radius: height / 2
             color: Theme.primary
         }
+    }
+
+    ShellText {
+        id: valueLabel
+
+        z: 1
+        anchors.right: parent.right
+        anchors.rightMargin: 14
+        anchors.verticalCenter: parent.verticalCenter
+        visible: root.valueText.length > 0
+        text: root.valueText
+        color: root.filled && filledTrack.x + filledBar.width >= x + width / 2 ? Theme.bgDim : Theme.foreground
+        font.pixelSize: 10
+        font.weight: Font.Bold
     }
 
     MouseArea {

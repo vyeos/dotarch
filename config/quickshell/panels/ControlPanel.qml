@@ -15,6 +15,7 @@ FocusScope {
     id: root
 
     readonly property var sink: Pipewire.defaultAudioSink
+    readonly property var source: Pipewire.defaultAudioSource
     readonly property var player: Mpris.players.values.length > 0 ? Mpris.players.values[0] : null
     readonly property var adapter: Bluetooth.defaultAdapter
     readonly property var wifiDevice: Networking.devices.values.find((device) => {
@@ -33,6 +34,17 @@ FocusScope {
     readonly property var availableWifiNetworks: wifiNetworks.filter((network) => !network.known)
     readonly property var audioSinks: Pipewire.nodes.values.filter((node) => {
         return node.isSink && !node.isStream && node.audio;
+    })
+    readonly property var audioSources: Pipewire.nodes.values.filter((node) => {
+        return !node.isSink && !node.isStream && node.audio;
+    }).slice().sort((left, right) => {
+        if (source && left.id === source.id)
+            return -1;
+
+        if (source && right.id === source.id)
+            return 1;
+
+        return (left.description || left.nickname || left.name).localeCompare(right.description || right.nickname || right.name);
     })
     readonly property var bluetoothDevices: adapter ? adapter.devices.values.filter((device) => {
         return device.name || device.deviceName;
@@ -57,7 +69,6 @@ FocusScope {
     property var pendingWifiNetwork: null
     property string wifiError: ""
     property bool wifiRefreshPending: false
-    readonly property bool audioPopoverOpen: expandedSection === "audio"
     readonly property real detailScrollFactor: 2
 
     function toggleSection(section) {
@@ -94,8 +105,8 @@ FocusScope {
     }
 
     function toggleAudio() {
-        if (sink && sink.audio)
-            sink.audio.muted = !sink.audio.muted;
+        if (source && source.audio)
+            source.audio.muted = !source.audio.muted;
     }
 
     function toggleBluetooth() {
@@ -301,6 +312,10 @@ FocusScope {
         objects: root.audioSinks
     }
 
+    PwObjectTracker {
+        objects: root.audioSources
+    }
+
     Timer {
         id: wifiRefreshTimer
 
@@ -420,13 +435,13 @@ FocusScope {
                 id: audioTile
 
                 width: (parent.width - 14) / 3
-                icon: root.sink && root.sink.audio && root.sink.audio.muted ? "󰝟" : "󰕾"
+                icon: root.source && root.source.audio && root.source.audio.muted ? "󰍭" : "󰍬"
                 title: "Audio"
-                subtitle: root.sink ? (root.sink.description || root.sink.nickname || "Default output") : "No output"
-                active: root.sink && root.sink.audio && !root.sink.audio.muted
+                subtitle: root.source ? (root.source.description || root.source.nickname || "Default input") : "No input"
+                active: root.source && root.source.audio && !root.source.audio.muted
                 expandable: true
                 expanded: root.expandedSection === "audio"
-                detailAccessibleName: "Show sound outputs"
+                detailAccessibleName: "Show audio inputs"
                 onClicked: root.toggleAudio()
                 onDetailClicked: root.toggleSection("audio")
             }
@@ -478,14 +493,14 @@ FocusScope {
             parent: root
             readonly property bool audioMode: root.displayedSection === "audio"
             readonly property bool nightLightMode: root.displayedSection === "nightlight"
-            readonly property bool compactMode: audioMode || nightLightMode
+            readonly property bool compactMode: nightLightMode
             readonly property real availableHeight: root.height - y
 
-            x: audioMode ? Math.max(0, Math.min(root.width - width, audioTile.x + audioTile.width / 2 - width / 2)) : 0
+            x: 0
             y: systemActions.y + systemActions.height + content.spacing
             z: 20
             width: compactMode ? 320 : root.width
-            height: nightLightMode ? Math.min(92, availableHeight) : (audioMode ? Math.min(176, availableHeight) : availableHeight)
+            height: nightLightMode ? Math.min(92, availableHeight) : availableHeight
             radius: Theme.radius
             color: Theme.bg0
             clip: true
@@ -525,7 +540,7 @@ FocusScope {
 
                     ShellText {
                         width: parent.width
-                        text: root.displayedSection === "wifi" ? "Wi-Fi networks" : (root.displayedSection === "audio" ? "Sound output" : (root.displayedSection === "nightlight" ? ShellState.nightLightTemperature + " K" : "Bluetooth devices"))
+                        text: root.displayedSection === "wifi" ? "Wi-Fi networks" : (root.displayedSection === "audio" ? "Audio input" : (root.displayedSection === "nightlight" ? ShellState.nightLightTemperature + " K" : "Bluetooth devices"))
                         font.pixelSize: 12
                         font.weight: Font.Bold
                     }
@@ -537,7 +552,7 @@ FocusScope {
                                 return root.wifiError || (root.wifiRefreshPending ? "Refreshing…" : root.wifiNetworks.length + " available");
 
                             if (root.displayedSection === "audio")
-                                return root.audioSinks.length + " available";
+                                return root.audioSources.length + " available";
 
                             if (root.displayedSection === "nightlight")
                                 return "";
@@ -561,13 +576,13 @@ FocusScope {
                     width: 25
                     height: 25
                     visible: root.displayedSection === "audio" || root.displayedSection === "nightlight"
-                    icon: root.displayedSection === "audio" ? (root.sink && root.sink.audio && root.sink.audio.muted ? "󰝟" : "󰕾") : "󰐥"
+                    icon: root.displayedSection === "audio" ? (root.source && root.source.audio && root.source.audio.muted ? "󰍭" : "󰍬") : "󰐥"
                     accessibleName: {
                         if (root.displayedSection === "wifi")
                             return Networking.wifiEnabled ? "Turn Wi-Fi off" : "Turn Wi-Fi on";
 
                         if (root.displayedSection === "audio")
-                            return root.sink && root.sink.audio && root.sink.audio.muted ? "Unmute audio" : "Mute audio";
+                            return root.source && root.source.audio && root.source.audio.muted ? "Unmute microphone" : "Mute microphone";
 
                         if (root.displayedSection === "nightlight")
                             return Backend.nightLightStatus === "on" ? "Turn Night Light off" : "Turn Night Light on";
@@ -579,7 +594,7 @@ FocusScope {
                             return Networking.wifiEnabled ? Theme.primary : Theme.muted;
 
                         if (root.displayedSection === "audio")
-                            return root.sink && root.sink.audio && !root.sink.audio.muted ? Theme.primary : Theme.muted;
+                            return root.source && root.source.audio && !root.source.audio.muted ? Theme.primary : Theme.muted;
 
                         if (root.displayedSection === "nightlight")
                             return Backend.nightLightStatus === "on" ? Theme.primary : Theme.muted;
@@ -589,8 +604,8 @@ FocusScope {
                     onClicked: {
                         if (root.displayedSection === "wifi")
                             root.toggleWifi();
-                        else if (root.displayedSection === "audio" && root.sink && root.sink.audio)
-                            root.sink.audio.muted = !root.sink.audio.muted;
+                        else if (root.displayedSection === "audio" && root.source && root.source.audio)
+                            root.source.audio.muted = !root.source.audio.muted;
                         else if (root.displayedSection === "nightlight")
                             Backend.toggleNightLight();
                         else if (root.adapter)
@@ -636,6 +651,30 @@ FocusScope {
                 accessibleName: "Night Light temperature"
                 value: (ShellState.nightLightTemperature - 2500) / 3500
                 onMoved: (value) => Backend.setNightLightTemperature(2500 + value * 3500)
+            }
+
+            StyledSlider {
+                id: inputVolumeSlider
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: pickerHeader.bottom
+                anchors.leftMargin: 7
+                anchors.rightMargin: 7
+                anchors.topMargin: 5
+                visible: root.displayedSection === "audio"
+                enabled: visible && root.source && root.source.audio
+                filled: true
+                icon: root.source && root.source.audio && root.source.audio.muted ? "󰍭" : "󰍬"
+                accessibleName: "Input volume"
+                value: root.source && root.source.audio ? root.source.audio.volume : 0
+                valueText: Math.round(value * 100) + "%"
+                onMoved: (value) => {
+                    if (root.source && root.source.audio) {
+                        root.source.audio.volume = value;
+                        root.source.audio.muted = false;
+                    }
+                }
             }
 
             Row {
@@ -812,26 +851,27 @@ FocusScope {
 
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.top: pickerHeader.bottom
+                anchors.top: inputVolumeSlider.bottom
                 anchors.bottom: parent.bottom
                 anchors.margins: 7
                 anchors.topMargin: 5
                 visible: root.displayedSection === "audio"
                 clip: true
                 spacing: 4
-                model: root.audioSinks
+                model: root.audioSources
 
                 delegate: ConnectionRow {
                     required property var modelData
-                    readonly property bool isDefault: root.sink && modelData.id === root.sink.id
+                    readonly property bool isDefault: root.source && modelData.id === root.source.id
 
                     width: audioList.width
-                    icon: isDefault ? "󰕾" : "󰓃"
+                    height: 42
+                    icon: "󰍬"
                     title: modelData.description || modelData.nickname || modelData.name
-                    subtitle: modelData.nickname && modelData.nickname !== title ? modelData.nickname : "Audio output"
+                    subtitle: modelData.nickname && modelData.nickname !== title ? modelData.nickname : "Audio input"
                     active: isDefault
-                    actionText: isDefault ? "Connected" : "Switch"
-                    onClicked: Pipewire.preferredDefaultAudioSink = modelData
+                    actionText: isDefault ? "Selected" : "Select"
+                    onClicked: Pipewire.preferredDefaultAudioSource = modelData
                 }
 
             }
@@ -922,6 +962,7 @@ FocusScope {
             icon: root.sink && root.sink.audio && root.sink.audio.muted ? "󰝟" : "󰕾"
             accessibleName: "Volume"
             value: root.sink && root.sink.audio ? root.sink.audio.volume : 0
+            valueText: Math.round(value * 100) + "%"
             onMoved: (value) => {
                 if (root.sink && root.sink.audio) {
                     root.sink.audio.volume = value;
@@ -939,6 +980,7 @@ FocusScope {
             icon: "󰃠"
             accessibleName: "Brightness"
             value: Backend.brightness / 100
+            valueText: Math.round(value * 100) + "%"
             onMoved: (value) => {
                 return Backend.setBrightness(value * 100);
             }
@@ -1172,22 +1214,6 @@ FocusScope {
 
             }
 
-        }
-
-    }
-
-    Rectangle {
-        anchors.left: parent.left
-        anchors.right: parent.right
-        y: quickActions.y + quickActions.height + content.spacing
-        height: root.height - y
-        z: 19
-        visible: root.audioPopoverOpen
-        color: Qt.rgba(0.12, 0.14, 0.15, 0.58)
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: root.closeDetails()
         }
 
     }

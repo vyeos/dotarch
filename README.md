@@ -24,7 +24,7 @@ colors, images, actions, and automatic dismissal.
 The control center brings the everyday hardware controls into one surface:
 
 - Wi-Fi scanning, secured-network connection, and signal information
-- audio output selection, mute, and volume
+- audio output volume plus microphone selection, mute, and input level
 - Bluetooth discovery, pairing, connection, and device battery information
 - adjustable night light and cycling power profiles
 - display brightness, laptop battery state, and system tray items
