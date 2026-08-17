@@ -77,14 +77,34 @@ window_candidates() {
   '
 }
 
+brightness_device() {
+  local path device maximum best_device= best_maximum=-1
+
+  for path in /sys/class/backlight/*; do
+    [[ -r $path/max_brightness ]] || continue
+    read -r maximum < "$path/max_brightness"
+    [[ $maximum =~ ^[0-9]+$ ]] || continue
+    if (( maximum > best_maximum )); then
+      device=${path##*/}
+      best_device=$device
+      best_maximum=$maximum
+    fi
+  done
+
+  [[ -n $best_device ]] || return 1
+  printf '%s\n' "$best_device"
+}
+
 case "$action" in
   brightness-get)
-    brightnessctl -m | awk -F, '{ gsub(/%/, "", $4); print $4; exit }'
+    device=$(brightness_device)
+    brightnessctl -d "$device" -m | awk -F, '{ gsub(/%/, "", $4); print $4; exit }'
     ;;
   brightness-set)
     percentage=${2:?brightness percentage required}
     [[ $percentage =~ ^[0-9]+$ ]] && (( percentage >= 0 && percentage <= 100 ))
-    brightnessctl set "$percentage%" >/dev/null
+    device=$(brightness_device)
+    brightnessctl -d "$device" set "$percentage%" >/dev/null
     ;;
   night-light-status)
     command -v hyprsunset >/dev/null || { echo unavailable; exit; }
