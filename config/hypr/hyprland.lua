@@ -236,11 +236,13 @@ hl.device({
 local mainMod = "SUPER" -- Sets "Windows" key as main modifier
 local hyper = "MOD3" -- Caps Lock is remapped to a Hyper key (caps:hyper)
 
--- Lock and power down every display when the laptop lid closes. logind is
+-- Lock and suspend the system when the laptop lid closes. logind is
 -- configured to leave lid handling to Hyprland, avoiding duplicate actions.
 hl.bind(
 	"switch:on:Lid Switch",
-	hl.dsp.exec_cmd("loginctl lock-session; sleep 1; hyprctl dispatch dpms off"),
+	hl.dsp.exec_cmd(
+		"pidof hyprlock >/dev/null || hyprlock --config ~/.config/hypr/hyprlock.conf & sleep 1; systemctl suspend"
+	),
 	{ locked = true }
 )
 hl.bind("switch:off:Lid Switch", hl.dsp.exec_cmd("hyprctl dispatch dpms on"), { locked = true })
