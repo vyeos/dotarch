@@ -9,9 +9,12 @@ image/jpeg=org.gnome.Loupe.desktop
 x-scheme-handler/t3code=t3code-url-handler.desktop
 image/png=org.gnome.Loupe.desktop
 image/gif=org.gnome.Loupe.desktop
+application/pdf=org.gnome.Papers.desktop
+x-scheme-handler/antigravity=antigravity.desktop
 
 [Added Associations]
 application/vnd.openxmlformats-officedocument.wordprocessingml.document=onlyoffice-desktopeditors.desktop;
 image/jpeg=org.gnome.Loupe.desktop;
 image/png=org.gnome.Loupe.desktop;
 image/gif=org.gnome.Loupe.desktop;
+application/pdf=org.gnome.Papers.desktop;
