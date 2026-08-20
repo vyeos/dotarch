@@ -6,7 +6,11 @@ widgetStyle=Breeze
 
 [Recent Dirs]
 KdenliveClipFolder[$e]=$HOME/Videos/YT/The Most Important Part of a Rice Is…/,$HOME/Videos/YT/Hyprland Has a Dynamic Island Now/,$HOME/Videos
-KdenliveProjectsFolder[$e]=$HOME/Videos,$HOME/Documents
+KdenliveProjectsFolder[$e]=$HOME/Videos/Kdenlive,$HOME/Videos,$HOME/Documents
+
+[Recent Files]
+File1[$e]=$HOME/Videos/Kdenlive/wallpaper vid.kdenlive
+Name1[$e]=wallpaper vid.kdenlive
 
 [Recent Profiles]
 recentProfileNames=HD 1080p 30 fps,HD 1080p 25 fps
