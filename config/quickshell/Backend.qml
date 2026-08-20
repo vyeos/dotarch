@@ -52,8 +52,7 @@ Singleton {
 
     function setNightLightTemperature(value) {
         ShellState.nightLightTemperature = Math.max(2500, Math.min(6000, Math.round(value / 50) * 50));
-        if (nightLightStatus === "on")
-            nightLightCommit.restart();
+        nightLightCommit.restart();
     }
 
     function cyclePowerProfile() {
@@ -222,6 +221,19 @@ Singleton {
         running: true
         stdout: StdioCollector {
             onStreamFinished: root.nightLightStatus = text.trim() || "off"
+        }
+    }
+
+    Process {
+        command: [root.helper, "night-light-temperature-get"]
+        running: true
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const temperature = Number(text.trim());
+                if (temperature >= 2500 && temperature <= 6000)
+                    ShellState.nightLightTemperature = temperature;
+            }
         }
     }
 

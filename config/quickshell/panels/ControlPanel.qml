@@ -34,6 +34,14 @@ FocusScope {
     readonly property var availableWifiNetworks: wifiNetworks.filter((network) => !network.known)
     readonly property var audioSinks: Pipewire.nodes.values.filter((node) => {
         return node.isSink && !node.isStream && node.audio;
+    }).slice().sort((left, right) => {
+        if (sink && left.id === sink.id)
+            return -1;
+
+        if (sink && right.id === sink.id)
+            return 1;
+
+        return (left.description || left.nickname || left.name).localeCompare(right.description || right.nickname || right.name);
     })
     readonly property var audioSources: Pipewire.nodes.values.filter((node) => {
         return !node.isSink && !node.isStream && node.audio;
@@ -107,6 +115,11 @@ FocusScope {
     function toggleAudio() {
         if (source && source.audio)
             source.audio.muted = !source.audio.muted;
+    }
+
+    function toggleOutputAudio() {
+        if (sink && sink.audio)
+            sink.audio.muted = !sink.audio.muted;
     }
 
     function toggleBluetooth() {
@@ -417,6 +430,42 @@ FocusScope {
             }
 
             ActionTile {
+                id: audioTile
+
+                width: (parent.width - 14) / 3
+                icon: root.source && root.source.audio && root.source.audio.muted ? "󰍭" : "󰍬"
+                title: "Input Audio"
+                subtitle: root.source ? (root.source.description || root.source.nickname || "Default input") : "No input"
+                active: root.source && root.source.audio && !root.source.audio.muted
+                expandable: true
+                expanded: root.expandedSection === "audio"
+                detailAccessibleName: "Show audio inputs"
+                onClicked: root.toggleAudio()
+                onDetailClicked: root.toggleSection("audio")
+            }
+
+            ActionTile {
+                width: (parent.width - 14) / 3
+                icon: root.batteryCharging ? "" : "󰁹"
+                title: "Battery: " + Math.round(root.batteryLevel * 100) + "%"
+                subtitle: {
+                    const words = Backend.powerProfile.split("-");
+                    return words.map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
+                }
+                active: root.batteryCharging || Backend.powerProfile === "performance"
+                onClicked: Backend.cyclePowerProfile()
+            }
+
+        }
+
+        Row {
+            id: systemActions
+
+            width: parent.width
+            height: 58
+            spacing: 7
+
+            ActionTile {
                 id: bluetoothTile
 
                 width: (parent.width - 14) / 3
@@ -432,33 +481,24 @@ FocusScope {
             }
 
             ActionTile {
-                id: audioTile
+                id: outputAudioTile
 
                 width: (parent.width - 14) / 3
-                icon: root.source && root.source.audio && root.source.audio.muted ? "󰍭" : "󰍬"
-                title: "Audio"
-                subtitle: root.source ? (root.source.description || root.source.nickname || "Default input") : "No input"
-                active: root.source && root.source.audio && !root.source.audio.muted
+                icon: root.sink && root.sink.audio && root.sink.audio.muted ? "󰝟" : "󰕾"
+                title: "Output Audio"
+                subtitle: root.sink ? (root.sink.description || root.sink.nickname || "Default output") : "No output"
+                active: root.sink && root.sink.audio && !root.sink.audio.muted
                 expandable: true
-                expanded: root.expandedSection === "audio"
-                detailAccessibleName: "Show audio inputs"
-                onClicked: root.toggleAudio()
-                onDetailClicked: root.toggleSection("audio")
+                expanded: root.expandedSection === "output"
+                detailAccessibleName: "Show audio outputs"
+                onClicked: root.toggleOutputAudio()
+                onDetailClicked: root.toggleSection("output")
             }
-
-        }
-
-        Row {
-            id: systemActions
-
-            width: parent.width
-            height: 58
-            spacing: 7
 
             ActionTile {
                 id: nightLightTile
 
-                width: (parent.width - 7) / 2
+                width: (parent.width - 14) / 3
                 icon: "󰖔"
                 title: "Night Light"
                 subtitle: Backend.nightLightStatus === "unavailable" ? "Not installed" : (Backend.nightLightStatus === "on" ? ShellState.nightLightTemperature + " K" : "Off")
@@ -470,33 +510,18 @@ FocusScope {
                 onDetailClicked: root.toggleSection("nightlight")
             }
 
-            ActionTile {
-                width: (parent.width - 7) / 2
-                icon: root.batteryCharging ? "" : "󰁹"
-                title: "Power & Battery"
-                subtitle: {
-                    const battery = Math.round(root.batteryLevel * 100) + "%" + (root.batteryCharging ? " charging" : "");
-                    if (Backend.powerProfile === "unavailable")
-                        return battery;
-                    const profile = Backend.powerProfile === "power-saver" ? "Power saver" : Backend.powerProfile.charAt(0).toUpperCase() + Backend.powerProfile.slice(1);
-                    return battery + "  ·  " + profile;
-                }
-                active: root.batteryCharging || Backend.powerProfile === "performance"
-                onClicked: Backend.cyclePowerProfile()
-            }
-
         }
 
         Rectangle {
             id: devicePicker
 
             parent: root
-            readonly property bool audioMode: root.displayedSection === "audio"
+            readonly property bool audioMode: root.displayedSection === "audio" || root.displayedSection === "output"
             readonly property bool nightLightMode: root.displayedSection === "nightlight"
             readonly property bool compactMode: nightLightMode
             readonly property real availableHeight: root.height - y
 
-            x: 0
+            x: compactMode ? root.width - width : 0
             y: systemActions.y + systemActions.height + content.spacing
             z: 20
             width: compactMode ? 320 : root.width
@@ -511,7 +536,7 @@ FocusScope {
             Rectangle {
                 anchors.top: parent.top
                 x: {
-                    const sourceTile = devicePicker.audioMode ? audioTile : nightLightTile;
+                    const sourceTile = root.displayedSection === "audio" ? audioTile : (root.displayedSection === "output" ? outputAudioTile : nightLightTile);
                     const centeredX = sourceTile.x + sourceTile.width / 2 - devicePicker.x - width / 2;
                     return Math.max(Theme.radius, Math.min(parent.width - width - Theme.radius, centeredX));
                 }
@@ -540,7 +565,7 @@ FocusScope {
 
                     ShellText {
                         width: parent.width
-                        text: root.displayedSection === "wifi" ? "Wi-Fi networks" : (root.displayedSection === "audio" ? "Audio input" : (root.displayedSection === "nightlight" ? ShellState.nightLightTemperature + " K" : "Bluetooth devices"))
+                        text: root.displayedSection === "wifi" ? "Wi-Fi networks" : (root.displayedSection === "audio" ? "Audio input" : (root.displayedSection === "output" ? "Audio output" : (root.displayedSection === "nightlight" ? ShellState.nightLightTemperature + " K" : "Bluetooth devices")))
                         font.pixelSize: 12
                         font.weight: Font.Bold
                     }
@@ -553,6 +578,9 @@ FocusScope {
 
                             if (root.displayedSection === "audio")
                                 return root.audioSources.length + " available";
+
+                            if (root.displayedSection === "output")
+                                return root.audioSinks.length + " available";
 
                             if (root.displayedSection === "nightlight")
                                 return "";
@@ -575,14 +603,17 @@ FocusScope {
                     anchors.verticalCenter: parent.verticalCenter
                     width: 25
                     height: 25
-                    visible: root.displayedSection === "audio" || root.displayedSection === "nightlight"
-                    icon: root.displayedSection === "audio" ? (root.source && root.source.audio && root.source.audio.muted ? "󰍭" : "󰍬") : "󰐥"
+                    visible: root.displayedSection === "audio" || root.displayedSection === "output" || root.displayedSection === "nightlight"
+                    icon: root.displayedSection === "audio" ? (root.source && root.source.audio && root.source.audio.muted ? "󰍭" : "󰍬") : (root.displayedSection === "output" ? (root.sink && root.sink.audio && root.sink.audio.muted ? "󰝟" : "󰕾") : "󰐥")
                     accessibleName: {
                         if (root.displayedSection === "wifi")
                             return Networking.wifiEnabled ? "Turn Wi-Fi off" : "Turn Wi-Fi on";
 
                         if (root.displayedSection === "audio")
                             return root.source && root.source.audio && root.source.audio.muted ? "Unmute microphone" : "Mute microphone";
+
+                        if (root.displayedSection === "output")
+                            return root.sink && root.sink.audio && root.sink.audio.muted ? "Unmute output" : "Mute output";
 
                         if (root.displayedSection === "nightlight")
                             return Backend.nightLightStatus === "on" ? "Turn Night Light off" : "Turn Night Light on";
@@ -596,6 +627,9 @@ FocusScope {
                         if (root.displayedSection === "audio")
                             return root.source && root.source.audio && !root.source.audio.muted ? Theme.primary : Theme.muted;
 
+                        if (root.displayedSection === "output")
+                            return root.sink && root.sink.audio && !root.sink.audio.muted ? Theme.primary : Theme.muted;
+
                         if (root.displayedSection === "nightlight")
                             return Backend.nightLightStatus === "on" ? Theme.primary : Theme.muted;
 
@@ -606,6 +640,8 @@ FocusScope {
                             root.toggleWifi();
                         else if (root.displayedSection === "audio" && root.source && root.source.audio)
                             root.source.audio.muted = !root.source.audio.muted;
+                        else if (root.displayedSection === "output" && root.sink && root.sink.audio)
+                            root.sink.audio.muted = !root.sink.audio.muted;
                         else if (root.displayedSection === "nightlight")
                             Backend.toggleNightLight();
                         else if (root.adapter)
@@ -673,6 +709,30 @@ FocusScope {
                     if (root.source && root.source.audio) {
                         root.source.audio.volume = value;
                         root.source.audio.muted = false;
+                    }
+                }
+            }
+
+            StyledSlider {
+                id: outputVolumeSlider
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: pickerHeader.bottom
+                anchors.leftMargin: 7
+                anchors.rightMargin: 7
+                anchors.topMargin: 5
+                visible: root.displayedSection === "output"
+                enabled: visible && root.sink && root.sink.audio
+                filled: true
+                icon: root.sink && root.sink.audio && root.sink.audio.muted ? "󰝟" : "󰕾"
+                accessibleName: "Output volume"
+                value: root.sink && root.sink.audio ? root.sink.audio.volume : 0
+                valueText: Math.round(value * 100) + "%"
+                onMoved: (value) => {
+                    if (root.sink && root.sink.audio) {
+                        root.sink.audio.volume = value;
+                        root.sink.audio.muted = false;
                     }
                 }
             }
@@ -872,6 +932,36 @@ FocusScope {
                     active: isDefault
                     actionText: isDefault ? "Selected" : "Select"
                     onClicked: Pipewire.preferredDefaultAudioSource = modelData
+                }
+
+            }
+
+            ListView {
+                id: outputAudioList
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: outputVolumeSlider.bottom
+                anchors.bottom: parent.bottom
+                anchors.margins: 7
+                anchors.topMargin: 5
+                visible: root.displayedSection === "output"
+                clip: true
+                spacing: 4
+                model: root.audioSinks
+
+                delegate: ConnectionRow {
+                    required property var modelData
+                    readonly property bool isDefault: root.sink && modelData.id === root.sink.id
+
+                    width: outputAudioList.width
+                    height: 42
+                    icon: "󰕾"
+                    title: modelData.description || modelData.nickname || modelData.name
+                    subtitle: modelData.nickname && modelData.nickname !== title ? modelData.nickname : "Audio output"
+                    active: isDefault
+                    actionText: isDefault ? "Selected" : "Select"
+                    onClicked: Pipewire.preferredDefaultAudioSink = modelData
                 }
 
             }

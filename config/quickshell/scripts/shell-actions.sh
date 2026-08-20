@@ -3,6 +3,7 @@ set -euo pipefail
 
 action=${1:-}
 recording_pid_file=${XDG_RUNTIME_DIR:-/run/user/$UID}/quickshell-wf-recorder.pid
+night_light_state_file=${XDG_STATE_HOME:-"$HOME/.local/state"}/quickshell/night-light-temperature
 
 recording_pid() {
   local pid
@@ -110,10 +111,22 @@ case "$action" in
     command -v hyprsunset >/dev/null || { echo unavailable; exit; }
     pgrep -x hyprsunset >/dev/null && echo on || echo off
     ;;
+  night-light-temperature-get)
+    temperature=4500
+    if [[ -r $night_light_state_file ]]; then
+      read -r saved_temperature < "$night_light_state_file"
+      if [[ $saved_temperature =~ ^[0-9]+$ ]] && (( saved_temperature >= 2500 && saved_temperature <= 6000 )); then
+        temperature=$saved_temperature
+      fi
+    fi
+    printf '%s\n' "$temperature"
+    ;;
   night-light-toggle)
     command -v hyprsunset >/dev/null || exit 1
     temperature=${2:-4500}
     [[ $temperature =~ ^[0-9]+$ ]] && (( temperature >= 2500 && temperature <= 6000 ))
+    mkdir -p -- "${night_light_state_file%/*}"
+    printf '%s\n' "$temperature" > "$night_light_state_file"
     if pgrep -x hyprsunset >/dev/null; then
       pkill -x hyprsunset
     else
@@ -124,6 +137,8 @@ case "$action" in
     command -v hyprsunset >/dev/null || exit 1
     temperature=${2:?night light temperature required}
     [[ $temperature =~ ^[0-9]+$ ]] && (( temperature >= 2500 && temperature <= 6000 ))
+    mkdir -p -- "${night_light_state_file%/*}"
+    printf '%s\n' "$temperature" > "$night_light_state_file"
     if pgrep -x hyprsunset >/dev/null; then
       hyprctl hyprsunset temperature "$temperature" >/dev/null
     fi
