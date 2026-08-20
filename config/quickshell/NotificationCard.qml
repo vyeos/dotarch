@@ -10,6 +10,8 @@ Item {
 
     required property var notification
     readonly property bool critical: notification.urgency === NotificationUrgency.Critical
+    readonly property bool batteryNotification: (notification.appName || "").toLowerCase() === "power"
+        || (notification.summary || "").toLowerCase().includes("battery")
     readonly property color accent: critical ? Theme.red : (notification.urgency === NotificationUrgency.Low ? Theme.mutedDark : Theme.primary)
     readonly property int timeout: {
         if (critical || notification.expireTimeout === 0)
@@ -23,10 +25,11 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: Theme.radius
-        color: Theme.bg0
+        radius: 24
+        color: Qt.rgba(Theme.bg0.r, Theme.bg0.g, Theme.bg0.b, 0.86)
         border.width: 1
-        border.color: root.accent
+        border.color: root.critical ? Qt.rgba(Theme.red.r, Theme.red.g, Theme.red.b, 0.7) : Qt.rgba(1, 1, 1, 0.12)
+        z: -1
     }
 
     Column {
@@ -46,21 +49,22 @@ Item {
             Rectangle {
                 width: 38
                 height: 38
-                radius: Theme.radiusSmall
-                color: Theme.bg1
+                radius: 12
+                color: Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.13)
                 clip: true
 
                 ShellText {
                     anchors.centerIn: parent
-                    text: "󰂚"
+                    text: root.batteryNotification ? "󰂃" : "󰂚"
                     color: root.accent
                     font.family: "JetBrainsMono Nerd Font"
-                    font.pixelSize: 17
+                    font.pixelSize: root.batteryNotification ? 19 : 17
                 }
 
                 IconImage {
                     anchors.fill: parent
                     anchors.margins: 6
+                    visible: !root.batteryNotification
                     source: root.notification.image || (root.notification.appIcon ? Quickshell.iconPath(root.notification.appIcon) : "")
                 }
             }
@@ -94,9 +98,13 @@ Item {
 
                 width: 28
                 height: 28
+                z: 2
                 icon: "×"
                 accessibleName: "Dismiss notification"
-                backgroundColor: Theme.bg1
+                backgroundColor: Qt.rgba(Theme.bg1.r, Theme.bg1.g, Theme.bg1.b, 0.72)
+                foregroundColor: Theme.muted
+                hoverBackgroundColor: Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.18)
+                hoverForegroundColor: root.accent
                 onClicked: root.notification.dismiss()
             }
         }

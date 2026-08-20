@@ -25,6 +25,8 @@ ShellRoot {
         screen: Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
     }
 
+    LowBatteryMonitor {}
+
     Variants {
         model: Quickshell.screens
 

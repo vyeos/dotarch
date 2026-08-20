@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en" data-theme="everforest">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VyeOS Notification Concepts</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #232a2e; --surface: #2d353b; --surface-2: #343f44; --surface-3: #3d484d;
+      --text: #d3c6aa; --muted: #9da9a0; --faint: #7a8478; --accent: #a7c080;
+      --accent-rgb: 167,192,128; --red: #e67e80; --yellow: #dbbc7f; --blue: #7fbbb3;
+      --purple: #d699b6; --shadow: rgba(8,12,14,.45); --radius: 18px;
+    }
+    [data-theme="mocha"] { --bg:#11111b;--surface:#1e1e2e;--surface-2:#313244;--surface-3:#45475a;--text:#cdd6f4;--muted:#a6adc8;--faint:#6c7086;--accent:#cba6f7;--accent-rgb:203,166,247;--red:#f38ba8;--yellow:#f9e2af;--blue:#89b4fa;--purple:#f5c2e7;--shadow:rgba(0,0,0,.5) }
+    [data-theme="nord"] { --bg:#242933;--surface:#2e3440;--surface-2:#3b4252;--surface-3:#434c5e;--text:#eceff4;--muted:#d8dee9;--faint:#7f8a9a;--accent:#88c0d0;--accent-rgb:136,192,208;--red:#bf616a;--yellow:#ebcb8b;--blue:#81a1c1;--purple:#b48ead;--shadow:rgba(10,14,20,.5) }
+    [data-theme="rose"] { --bg:#191724;--surface:#26233a;--surface-2:#2a273f;--surface-3:#393552;--text:#e0def4;--muted:#908caa;--faint:#6e6a86;--accent:#c4a7e7;--accent-rgb:196,167,231;--red:#eb6f92;--yellow:#f6c177;--blue:#9ccfd8;--purple:#c4a7e7;--shadow:rgba(8,6,16,.55) }
+    [data-theme="tokyo"] { --bg:#16161e;--surface:#1a1b26;--surface-2:#24283b;--surface-3:#414868;--text:#c0caf5;--muted:#a9b1d6;--faint:#565f89;--accent:#7aa2f7;--accent-rgb:122,162,247;--red:#f7768e;--yellow:#e0af68;--blue:#7dcfff;--purple:#bb9af7;--shadow:rgba(5,7,14,.55) }
+    * { box-sizing: border-box }
+    body { margin:0; min-height:100vh; color:var(--text); font:14px/1.45 Geist,Inter,system-ui,sans-serif; background:radial-gradient(circle at 16% 0%,rgba(var(--accent-rgb),.12),transparent 28rem),var(--bg); transition:.25s ease }
+    button,select { font:inherit }
+    .page { width:min(1500px,calc(100% - 40px)); margin:auto; padding:50px 0 80px }
+    header { display:flex; align-items:end; justify-content:space-between; gap:28px; margin-bottom:38px }
+    .eyebrow,.family-index,.app { text-transform:uppercase; letter-spacing:.12em; font-size:10px; font-weight:750 }
+    .eyebrow { color:var(--accent); margin-bottom:9px }
+    h1 { margin:0; font-size:clamp(30px,4vw,56px); line-height:1; letter-spacing:-.045em }
+    .lede { max-width:650px; margin:14px 0 0; color:var(--muted); font-size:15px }
+    .theme-picker { display:flex; align-items:center; gap:9px; padding:7px 8px 7px 13px; border:1px solid var(--surface-3); border-radius:12px; background:var(--surface) }
+    .theme-picker span { color:var(--muted); font-size:12px }
+    select { color:var(--text); border:0; outline:0; padding:6px 28px 6px 8px; border-radius:8px; background:var(--surface-2) }
+    .family { padding:30px 0 42px; border-top:1px solid color-mix(in srgb,var(--surface-3) 70%,transparent) }
+    .family-head { display:flex; justify-content:space-between; gap:30px; margin-bottom:20px }
+    .family-index { color:var(--accent) }
+    h2 { font-size:22px; letter-spacing:-.025em; margin:4px 0 0 }
+    .family-note { max-width:480px; color:var(--muted); margin:4px 0 0; text-align:right }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(320px,1fr)); gap:18px }
+    .specimen { min-height:230px; display:grid; place-items:center; padding:34px; overflow:hidden; position:relative; border-radius:24px; background:color-mix(in srgb,var(--surface) 55%,transparent); border:1px solid color-mix(in srgb,var(--surface-3) 48%,transparent) }
+    .label { position:absolute; top:13px; left:16px; color:var(--faint); font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase }
+    .notification { position:relative; width:min(100%,440px); padding:15px; color:var(--text) }
+    .row { display:flex; align-items:center; gap:12px; min-width:0 }
+    .copy { min-width:0; flex:1 }
+    .app { color:var(--accent); margin-bottom:2px }
+    .title { font-weight:720; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+    .body { color:var(--muted); font-size:12px; margin-top:4px }
+    .time { align-self:flex-start; color:var(--faint); font-size:10px; white-space:nowrap }
+    .icon { width:40px; height:40px; flex:0 0 auto; display:grid; place-items:center; color:var(--accent); border-radius:12px; background:rgba(var(--accent-rgb),.12) }
+    .icon svg { width:19px; height:19px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round }
+    .icon.red { color:var(--red); background:color-mix(in srgb,var(--red) 13%,transparent) }
+    .close { width:25px;height:25px;border:0;border-radius:9px;color:var(--muted);background:transparent;cursor:pointer }
+    .close:hover { color:var(--text);background:var(--surface-3) }
+    .actions { display:flex; gap:7px; margin:13px 0 0 52px }
+    .action { border:0; border-radius:9px; padding:7px 11px; color:var(--text); background:var(--surface-3); font-weight:650; font-size:11px }
+    .action.primary { color:var(--bg); background:var(--accent) }
+    .progress { height:3px; margin-top:13px; border-radius:99px; overflow:hidden; background:var(--surface-3) }
+    .progress i { display:block; width:68%; height:100%; background:var(--accent); border-radius:inherit }
+    .avatar { width:44px;height:44px;flex:0 0 auto;border-radius:14px;display:grid;place-items:center;color:var(--bg);font-weight:800;background:linear-gradient(135deg,var(--blue),var(--purple)) }
+    .art { width:58px;height:58px;flex:0 0 auto;border-radius:12px;background:linear-gradient(145deg,var(--purple),var(--red) 55%,var(--yellow));position:relative;overflow:hidden }
+    .art:after { content:'♫';position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:21px;background:rgba(0,0,0,.12) }
+
+    /* 01 — Frosted */
+    .frost .notification { background:color-mix(in srgb,var(--surface) 78%,transparent); border:1px solid rgba(255,255,255,.11); border-radius:var(--radius); box-shadow:0 18px 46px var(--shadow),inset 0 1px rgba(255,255,255,.06); backdrop-filter:blur(22px) saturate(1.3) }
+    .frost .specimen { background:linear-gradient(145deg,color-mix(in srgb,var(--blue) 20%,var(--bg)),color-mix(in srgb,var(--purple) 12%,var(--bg))) }
+    .frost .v2 .notification { border-radius:25px; padding:10px 13px }
+    .frost .v2 .icon { width:34px;height:34px;border-radius:50% }
+    .frost .v3 .notification { padding:0; overflow:hidden }
+    .frost .v3 .row { padding:14px 15px }
+    .frost .v3 .actions { margin:0; border-top:1px solid rgba(255,255,255,.08); gap:0 }
+    .frost .v3 .action { flex:1;border-radius:0;background:transparent;padding:11px;border-right:1px solid rgba(255,255,255,.08) }
+    .frost .v3 .action.primary { color:var(--accent); background:rgba(var(--accent-rgb),.1) }
+    .frost .v4 .notification { border-color:color-mix(in srgb,var(--red) 55%,transparent); box-shadow:0 18px 46px var(--shadow),inset 0 0 26px color-mix(in srgb,var(--red) 6%,transparent) }
+
+    /* 02 — Soft solid */
+    .solid .notification { background:var(--surface); border-radius:var(--radius); box-shadow:0 13px 30px var(--shadow) }
+    .solid .icon { box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 15%,transparent) }
+    .solid .v2 .notification { padding:10px 12px;border-radius:14px }
+    .solid .v2 .body { margin-top:2px }
+    .solid .v3 .notification { background:var(--surface-2) }
+    .solid .v3 .art { width:64px;height:64px }
+    .solid .v4 .notification:after { content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;box-shadow:inset 0 -3px var(--accent) }
+
+    /* 03 — Accent rail */
+    .rail .notification { background:var(--surface);border-radius:14px;box-shadow:0 12px 28px var(--shadow);overflow:hidden;padding-left:20px }
+    .rail .notification:before { content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--accent) }
+    .rail .icon { background:var(--surface-2) }
+    .rail .v2 .notification:before { width:3px;background:var(--blue) }
+    .rail .v2 .icon { color:var(--blue) }
+    .rail .v3 .notification:before { width:7px;background:linear-gradient(var(--accent),var(--blue)) }
+    .rail .v3 .actions { margin-left:52px }
+    .rail .v4 .notification:before { background:var(--red) }
+    .rail .v4 .app { color:var(--red) }
+
+    /* 04 — Capsule */
+    .capsule .notification { width:min(100%,390px);padding:9px 11px;border-radius:999px;background:var(--surface);box-shadow:0 12px 32px var(--shadow);border:1px solid var(--surface-3) }
+    .capsule .icon { width:36px;height:36px;border-radius:50% }
+    .capsule .app { display:inline;margin-right:6px }
+    .capsule .title { display:inline;font-size:13px }
+    .capsule .body { white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:270px }
+    .capsule .v2 .notification { width:min(100%,460px);border-color:color-mix(in srgb,var(--accent) 45%,var(--surface-3)) }
+    .capsule .v3 .notification { border-radius:20px }
+    .capsule .v3 .art { width:45px;height:45px;border-radius:14px }
+    .capsule .v4 .notification { border:0;background:linear-gradient(100deg,var(--surface),color-mix(in srgb,var(--accent) 10%,var(--surface))) }
+
+    /* 05 — Layered */
+    .layered .notification { background:var(--surface);border-radius:18px;box-shadow:8px 8px 0 var(--surface-2),0 18px 38px var(--shadow);border:1px solid var(--surface-3) }
+    .layered .v2 .notification:before { content:'';position:absolute;inset:-7px 18px auto;height:7px;border-radius:10px 10px 0 0;background:var(--surface-3);z-index:-1 }
+    .layered .v3 .notification { box-shadow:0 0 0 5px var(--surface-2),0 16px 36px var(--shadow) }
+    .layered .v3 .actions { margin-left:52px }
+    .layered .v4 .notification { overflow:hidden;box-shadow:8px 8px 0 color-mix(in srgb,var(--red) 32%,var(--surface-2)),0 18px 38px var(--shadow) }
+    .layered .v4 .notification:before { content:'';position:absolute;right:-28px;top:-35px;width:100px;height:100px;border-radius:50%;background:color-mix(in srgb,var(--red) 11%,transparent) }
+    .hint { margin:34px 0 0;color:var(--faint);text-align:center;font-size:12px }
+    @media(max-width:800px){.page{width:min(100% - 22px,680px);padding-top:28px}header,.family-head{display:block}.theme-picker{margin-top:20px;width:max-content}.family-note{text-align:left}.grid{grid-template-columns:1fr}.specimen{padding:30px 18px;min-height:210px}}
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute"><symbol id="bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></symbol><symbol id="download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M5 21h14"/></symbol><symbol id="message" viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></symbol><symbol id="shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4"/></symbol></svg>
+  <main class="page">
+    <header><div><div class="eyebrow">VyeOS / Quickshell study</div><h1>Notification directions</h1><p class="lede">Twenty practical concepts built around the shell’s rounded geometry, dark palettes, restrained accents, and compact desktop rhythm.</p></div><label class="theme-picker"><span>Preview palette</span><select id="theme"><option value="everforest">Everforest</option><option value="mocha">Catppuccin Mocha</option><option value="nord">Nord</option><option value="rose">Rosé Pine</option><option value="tokyo">Tokyo Night</option></select></label></header>
+
+    <section class="family frost"><div class="family-head"><div><div class="family-index">Aesthetic 01</div><h2>Frosted desktop glass</h2></div><p class="family-note">Wallpaper-aware translucency with a subtle inner highlight. Best match when blur is already part of the Hyprland setup.</p></div><div class="grid">
+      <article class="specimen v1"><span class="label">01 / Standard</span><div class="notification"><div class="row"><div class="icon"><svg><use href="#bell"/></svg></div><div class="copy"><div class="app">System</div><div class="title">Theme applied successfully</div><div class="body">Everforest is now active across your desktop.</div></div><span class="time">now</span><button class="close">×</button></div></div></article>
+      <article class="specimen v2"><span class="label">02 / Compact</span><div class="notification"><div class="row"><div class="icon"><svg><use href="#message"/></svg></div><div class="copy"><div class="title">Maya sent you a message</div><div class="body">The updated mockups look great.</div></div><span class="time">2m</span></div></div></article>
+      <article class="specimen v3"><span class="label">03 / Action</span><div class="notification"><div class="row"><div class="icon"><svg><use href="#shield"/></svg></div><div class="copy"><div class="app">Bluetooth</div><div class="title">New device wants to pair</div><div class="body">MX Master 3S · code 482901</div></div><button class="close">×</button></div><div class="actions"><button class="action">Dismiss</button><button class="action primary">Connect</button></div></div></article>
+      <article class="specimen v4"><span class="label">04 / Critical</span><div class="notification"><div class="row"><div class="icon red"><svg><use href="#bell"/></svg></div><div class="copy"><div class="app" style="color:var(--red)">Battery</div><div class="title">Battery level is critical</div><div class="body">6% remaining · connect a charger soon.</div></div><span class="time">now</span></div></div></article>
+    </div></section>
+
+    <section class="family solid"><div class="family-head"><div><div class="family-index">Aesthetic 02</div><h2>Soft solid surface</h2></div><p class="family-note">The cleanest evolution of your current card: no loud outline, tighter spacing, deeper elevation, and clearer content hierarchy.</p></div><div class="grid">
+      <article class="specimen v1"><span class="label">01 / Standard</span><div class="notification"><div class="row"><div class="icon"><svg><use href="#bell"/></svg></div><div class="copy"><div class="app">Quickshell</div><div class="title">Screenshot copied</div><div class="body">Saved to Pictures/Screenshots.</div></div><span class="time">now</span><button class="close">×</button></div></div></article>
+      <article class="specimen v2"><span class="label">02 / Minimal</span><div class="notification"><div class="row"><div class="icon"><svg><use href="#message"/></svg></div><div class="copy"><div class="title">No new notifications</div><div class="body">You’re all caught up.</div></div><span class="time">now</span></div></div></article>
+      <article class="specimen v3"><span class="label">03 / Media</span><div class="notification"><div class="row"><div class="art"></div><div class="copy"><div class="app">Spotify</div><div class="title">Space Song</div><div class="body">Beach House · Depression Cherry</div></div><button class="close">×</button></div></div></article>
+      <article class="specimen v4"><span class="label">04 / Progress</span><div class="notification"><div class="row"><div class="icon"><svg><use href="#download"/></svg></div><div class="copy"><div class="app">Downloads</div><div class="title">Arch Linux ISO</div><div class="body">3.1 GB of 4.6 GB · 2 minutes left</div><div class="progress"><i></i></div></div><span class="time">68%</span></div></div></article>
+    </div></section>
+
+    <section class="family rail"><div class="family-head"><div><div class="family-index">Aesthetic 03</div><h2>Signal rail</h2></div><p class="family-note">A narrow color rail carries urgency while the card stays quiet. Strong at-a-glance language without outlining the whole surface.</p></div><div class="grid">
+      <article class="specimen v1"><span class="label">01 / Normal</span><div class="notification"><div class="row"><div class="icon"><svg><use href="#bell"/></svg></div><div class="copy"><div class="app">Calendar</div><div class="title">Design review in 10 minutes</div><div class="body">Notification concepts · Focus room</div></div><span class="time">10m</span></div></div></article>
+      <article class="specimen v2"><span class="label">02 / Information</span><div class="notification"><div class="row"><div class="icon"><svg><use href="#download"/></svg></div><div class="copy"><div class="app" style="color:var(--blue)">Updates</div><div class="title">12 package updates available</div><div class="body">Includes linux, mesa, and quickshell.</div></div><button class="close">×</button></div></div></article>
+      <article class="specimen v3"><span class="label">03 / Reply</span><div class="notification"><div class="row"><div class="avatar">AK</div><div class="copy"><div class="app">Signal</div><div class="title">Aarav Kapoor</div><div class="body">Are we still on for this evening?</div></div><span class="time">1m</span></div><div class="actions"><button class="action">Mark read</button><button class="action primary">Reply</button></div></div></article>
+      <article class="specimen v4"><span class="label">04 / Critical</span><div class="notification"><div class="row"><div class="icon red"><svg><use href="#shield"/></svg></div><div class="copy"><div class="app">Security</div><div class="title">Authentication failed</div><div class="body">The fingerprint reader could not verify you.</div></div><button class="close">×</button></div></div></article>
+    </div></section>
+
+    <section class="family capsule"><div class="family-head"><div><div class="family-index">Aesthetic 04</div><h2>Floating capsule</h2></div><p class="family-note">A small, glanceable island for routine events. It keeps visual interruption low and works especially well near the top notch.</p></div><div class="grid">
+      <article class="specimen v1"><span class="label">01 / Micro</span><div class="notification"><div class="row"><div class="icon"><svg><use href="#bell"/></svg></div><div class="copy"><div><span class="app">Audio</span><span class="title">Output changed</span></div><div class="body">WH-1000XM5</div></div><span class="time">now</span></div></div></article>
+      <article class="specimen v2"><span class="label">02 / Status</span><div class="notification"><div class="row"><div class="icon"><svg><use href="#shield"/></svg></div><div class="copy"><div><span class="app">VPN</span><span class="title">Connected</span></div><div class="body">Mumbai · WireGuard · 18 ms</div></div><button class="close">×</button></div></div></article>
+      <article class="specimen v3"><span class="label">03 / Now playing</span><div class="notification"><div class="row"><div class="art"></div><div class="copy"><div><span class="app">Playing</span><span class="title">Space Song</span></div><div class="body">Beach House</div></div><span class="time">♫</span></div></div></article>
+      <article class="specimen v4"><span class="label">04 / Download</span><div class="notification"><div class="row"><div class="icon"><svg><use href="#download"/></svg></div><div class="copy"><div><span class="app">Saved</span><span class="title">wallpaper.webp</span></div><div class="body">Pictures/Wallpapers/Everforest</div></div><span class="time">✓</span></div></div></article>
+    </div></section>
+
+    <section class="family layered"><div class="family-head"><div><div class="family-index">Aesthetic 05</div><h2>Layered shell card</h2></div><p class="family-note">A more dimensional interpretation of the Quickshell notch: stacked surfaces communicate grouping, state, and importance.</p></div><div class="grid">
+      <article class="specimen v1"><span class="label">01 / Stacked</span><div class="notification"><div class="row"><div class="icon"><svg><use href="#bell"/></svg></div><div class="copy"><div class="app">Notifications</div><div class="title">3 new messages</div><div class="body">Signal, Discord, and Telegram</div></div><span class="time">3</span></div></div></article>
+      <article class="specimen v2"><span class="label">02 / Peek</span><div class="notification"><div class="row"><div class="avatar">VS</div><div class="copy"><div class="app">Discord</div><div class="title">vyeos / design</div><div class="body">This direction fits the shell much better.</div></div><button class="close">×</button></div></div></article>
+      <article class="specimen v3"><span class="label">03 / Decision</span><div class="notification"><div class="row"><div class="icon"><svg><use href="#shield"/></svg></div><div class="copy"><div class="app">Network</div><div class="title">Join “Studio 5G”?</div><div class="body">A saved secure network is available.</div></div></div><div class="actions"><button class="action">Not now</button><button class="action primary">Join</button></div></div></article>
+      <article class="specimen v4"><span class="label">04 / Urgent</span><div class="notification"><div class="row"><div class="icon red"><svg><use href="#bell"/></svg></div><div class="copy"><div class="app" style="color:var(--red)">Power</div><div class="title">Suspend interrupted</div><div class="body">An application is preventing the system from sleeping.</div></div><span class="time">now</span></div></div></article>
+    </div></section>
+    <p class="hint">Tip: switch palettes above to test whether a direction survives beyond Everforest.</p>
+  </main>
+  <script>document.querySelector('#theme').addEventListener('change',e=>document.documentElement.dataset.theme=e.target.value);document.addEventListener('click',e=>{if(e.target.matches('.close'))e.target.closest('.notification').animate([{opacity:1,transform:'translateX(0)'},{opacity:0,transform:'translateX(28px)'}],{duration:180,fill:'forwards'})})</script>
+</body>
+</html>

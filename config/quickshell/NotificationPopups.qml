@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import Quickshell.Wayland
 import qs
 
 PanelWindow {
@@ -8,10 +9,11 @@ PanelWindow {
     required property var notificationModel
 
     implicitWidth: 390
-    implicitHeight: Math.min(screen ? screen.height - 40 : popupStack.implicitHeight, popupStack.implicitHeight)
+    implicitHeight: screen ? screen.height - 28 : popupStack.implicitHeight
     color: "transparent"
     aboveWindows: true
     exclusionMode: ExclusionMode.Ignore
+    WlrLayershell.namespace: "vyeos-notifications"
 
     anchors {
         top: true

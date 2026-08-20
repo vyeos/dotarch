@@ -381,6 +381,13 @@ hl.window_rule({
 })
 
 -- Layer rules also return a handle.
+hl.layer_rule({
+	name = "blur-vyeos-notifications",
+	match = { namespace = "^vyeos-notifications$" },
+	blur = true,
+	ignore_alpha = 0.08,
+})
+
 -- local overlayLayerRule = hl.layer_rule({
 --     name  = "no-anim-overlay",
 --     match = { namespace = "^my-overlay$" },
