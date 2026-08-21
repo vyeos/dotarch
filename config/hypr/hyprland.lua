@@ -264,6 +264,10 @@ hl.bind("ALT + SHIFT + 2", hl.dsp.exec_cmd("qs ipc call capture screenshot windo
 hl.bind("ALT + SHIFT + 3", hl.dsp.exec_cmd("qs ipc call capture screenshot region"))
 hl.bind("ALT + SHIFT + 4", hl.dsp.exec_cmd("qs ipc call capture toggleRecording"))
 
+-- Kdenlive edit macros.
+hl.bind("ALT + Q", hl.dsp.exec_cmd("~/.local/bin/kdenlive-macro q"))
+hl.bind("ALT + W", hl.dsp.exec_cmd("~/.local/bin/kdenlive-macro w"))
+
 hl.bind(hyper .. " + return", hl.dsp.exec_cmd(terminal))
 hl.bind(hyper .. " + B", hl.dsp.exec_cmd(browser))
 hl.bind(hyper .. " + T", hl.dsp.exec_cmd("/home/vyeos/.local/bin/t3code"))
