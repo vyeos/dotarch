@@ -91,22 +91,22 @@ write_sddm_theme() {
 
   {
     printf '[LockScreen]\nbackground = "vyeos-wallpaper.jpg"\nuse-background-color = %s\nbackground-color = "%s"\nblur = 28\nbrightness = -0.12\n\n' "$([[ $use_wallpaper == true ]] && printf false || printf true)" "$bg0"
-    printf '[LockScreen.Clock]\ncolor = "%s"\n\n[LockScreen.Date]\ncolor = "%s"\n\n' "$foreground" "$foreground"
-    printf '[LockScreen.Message]\ncolor = "%s"\n\n' "$foreground"
+    printf '[LockScreen.Clock]\ncolor = "%s"\nfont-size = 84\n\n[LockScreen.Date]\ncolor = "%s"\nfont-size = 17\n\n' "$foreground" "$foreground"
+    printf '[LockScreen.Message]\ncolor = "%s"\nfont-size = 14\n\n' "$foreground"
     printf '[LoginScreen]\nbackground = "vyeos-wallpaper.jpg"\nuse-background-color = %s\nbackground-color = "%s"\nblur = 28\nbrightness = -0.12\n\n' "$([[ $use_wallpaper == true ]] && printf false || printf true)" "$bg0"
     printf '[LoginScreen.LoginArea.Avatar]\nactive-border-color = "%s"\ninactive-border-color = "%s"\n\n' "$primary" "$primary"
-    printf '[LoginScreen.LoginArea.Username]\ncolor = "%s"\n\n' "$foreground"
-    printf '[LoginScreen.LoginArea.PasswordInput]\ncontent-color = "%s"\nbackground-color = "%s"\nborder-color = "%s"\n\n' "$foreground" "$bg1" "$primary"
-    printf '[LoginScreen.LoginArea.LoginButton]\nbackground-color = "%s"\nactive-background-color = "%s"\ncontent-color = "%s"\nactive-content-color = "%s"\nborder-color = "%s"\n\n' "$bg1" "$primary" "$primary" "$bg_dim" "$primary"
-    printf '[LoginScreen.LoginArea.Spinner]\ncolor = "%s"\n\n' "$foreground"
-    printf '[LoginScreen.LoginArea.WarningMessage]\nnormal-color = "%s"\nwarning-color = "%s"\nerror-color = "%s"\n\n' "$foreground" "$yellow" "$red"
-    printf '[LoginScreen.MenuArea.Popups]\nbackground-color = "%s"\nactive-option-background-color = "%s"\ncontent-color = "%s"\nactive-content-color = "%s"\nborder-color = "%s"\n\n' "$bg1" "$bg2" "$foreground" "$primary" "$primary"
+    printf '[LoginScreen.LoginArea.Username]\ncolor = "%s"\nfont-size = 19\n\n' "$foreground"
+    printf '[LoginScreen.LoginArea.PasswordInput]\ncontent-color = "%s"\nbackground-color = "%s"\nborder-color = "%s"\nfont-size = 14\n\n' "$foreground" "$bg1" "$primary"
+    printf '[LoginScreen.LoginArea.LoginButton]\nbackground-color = "%s"\nactive-background-color = "%s"\ncontent-color = "%s"\nactive-content-color = "%s"\nborder-color = "%s"\nfont-size = 14\n\n' "$bg1" "$primary" "$primary" "$bg_dim" "$primary"
+    printf '[LoginScreen.LoginArea.Spinner]\ncolor = "%s"\nfont-size = 17\n\n' "$foreground"
+    printf '[LoginScreen.LoginArea.WarningMessage]\nnormal-color = "%s"\nwarning-color = "%s"\nerror-color = "%s"\nfont-size = 13\n\n' "$foreground" "$yellow" "$red"
+    printf '[LoginScreen.MenuArea.Popups]\nbackground-color = "%s"\nactive-option-background-color = "%s"\ncontent-color = "%s"\nactive-content-color = "%s"\nborder-color = "%s"\nfont-size = 13\n\n' "$bg1" "$bg2" "$foreground" "$primary" "$primary"
     local section
     for section in Session Layout Keyboard Power; do
-      printf '[LoginScreen.MenuArea.%s]\nbackground-color = "%s"\ncontent-color = "%s"\nactive-content-color = "%s"\n\n' "$section" "$primary" "$foreground" "$bg_dim"
+      printf '[LoginScreen.MenuArea.%s]\nbackground-color = "%s"\ncontent-color = "%s"\nactive-content-color = "%s"\nfont-size = 12\n\n' "$section" "$primary" "$foreground" "$bg_dim"
     done
     printf '[LoginScreen.VirtualKeyboard]\nbackground-color = "%s"\nkey-content-color = "%s"\nkey-color = "%s"\nkey-active-background-color = "%s"\nselection-background-color = "%s"\nselection-content-color = "%s"\nprimary-color = "%s"\nborder-color = "%s"\n\n' "$bg1" "$foreground" "$bg2" "$primary" "$primary" "$bg_dim" "$primary" "$bg3"
-    printf '[Tooltips]\ncontent-color = "%s"\nbackground-color = "%s"\n' "$foreground" "$bg1"
+    printf '[Tooltips]\ncontent-color = "%s"\nbackground-color = "%s"\nfont-size = 13\n' "$foreground" "$bg1"
   } > "$output"
 }
 
