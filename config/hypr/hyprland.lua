@@ -245,7 +245,7 @@ hl.bind(
 	),
 	{ locked = true }
 )
-hl.bind("switch:off:Lid Switch", hl.dsp.exec_cmd("hyprctl dispatch dpms on"), { locked = true })
+hl.bind("switch:off:Lid Switch", hl.dsp.dpms({ action = "enable" }), { locked = true })
 
 -- Quickshell notch. The IPC target keeps compositor binds independent of UI internals.
 hl.bind(hyper .. " + C", hl.dsp.exec_cmd("qs ipc call notch toggle control"))
@@ -263,10 +263,6 @@ hl.bind("ALT + SHIFT + 1", hl.dsp.exec_cmd("qs ipc call capture screenshot full"
 hl.bind("ALT + SHIFT + 2", hl.dsp.exec_cmd("qs ipc call capture screenshot window"))
 hl.bind("ALT + SHIFT + 3", hl.dsp.exec_cmd("qs ipc call capture screenshot region"))
 hl.bind("ALT + SHIFT + 4", hl.dsp.exec_cmd("qs ipc call capture toggleRecording"))
-
--- Kdenlive edit macros.
-hl.bind("ALT + Q", hl.dsp.exec_cmd("~/.local/bin/kdenlive-macro q"))
-hl.bind("ALT + W", hl.dsp.exec_cmd("~/.local/bin/kdenlive-macro w"))
 
 hl.bind(hyper .. " + return", hl.dsp.exec_cmd(terminal))
 hl.bind(hyper .. " + B", hl.dsp.exec_cmd(browser))

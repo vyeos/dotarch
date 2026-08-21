@@ -76,6 +76,5 @@ wireplumber
 wl-clipboard
 xdg-desktop-portal-gtk
 xdg-desktop-portal-hyprland
-ydotool
 zoxide
 zram-generator

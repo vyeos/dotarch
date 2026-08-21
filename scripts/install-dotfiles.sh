@@ -49,8 +49,6 @@ touch "$HOME/.config/quickshell/.qmlls.ini"
 mkdir -p "$HOME/.local/bin"
 link_file "$repo_root/scripts/theme-switch" "$HOME/.local/bin/theme-switch"
 link_file "$repo_root/scripts/wallpaper-set" "$HOME/.local/bin/wallpaper-set"
-link_file "$repo_root/scripts/kdenlive-macro" "$HOME/.local/bin/kdenlive-macro"
-
 for theme in everforest catppuccin-mocha gruvbox nord tokyo-night rose-pine; do
   mkdir -p "${XDG_PICTURES_DIR:-$HOME/Pictures}/Wallpapers/$theme"
 done
