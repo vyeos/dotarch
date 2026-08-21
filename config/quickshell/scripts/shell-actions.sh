@@ -238,7 +238,7 @@ case "$action" in
         fi
         ;;
       suspend) systemctl suspend ;;
-      logout) hyprctl dispatch exit ;;
+      logout) hyprctl dispatch 'hl.dsp.exit()' ;;
       reboot) systemctl reboot ;;
       shutdown) systemctl poweroff ;;
       *) exit 2 ;;
